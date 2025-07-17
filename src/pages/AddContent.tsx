@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { callGemini } from '@/lib/gemini';
 import { storage } from '@/lib/storage';
 import { useApp } from '@/contexts/AppContext';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Link as LinkIcon, Loader2, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 type Step = 'type' | 'content' | 'processing' | 'details' | 'success';
