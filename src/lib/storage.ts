@@ -22,7 +22,7 @@ export interface Lesson {
   content: string;
   chapterId: string;
   subjectId: string;
-  type: 'text' | 'pdf' | 'image';
+  type: 'text' | 'pdf' | 'image' | 'url';
   aiGenerated?: {
     summary?: any;
     qcm?: any;
@@ -71,7 +71,7 @@ class StorageManager {
     localStorage.setItem(this.SUBJECTS_KEY, JSON.stringify(subjects));
   }
 
-  addSubject(subject: Omit<Subject, 'id' | 'createdAt'>): Subject {
+  addSubject(subject: Omit<Subject, 'id' | 'createdAt' | 'chapters'>): Subject {
     const subjects = this.getSubjects();
     const newSubject: Subject = {
       ...subject,
