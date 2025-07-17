@@ -20,7 +20,7 @@ export function Layout({ children, title, showBack, headerActions, className }: 
         actions={headerActions}
       />
       
-      <main className={cn("mobile-safe", className)}>
+      <main className={cn("pb-20 md:pb-4", className)}>
         {children}
       </main>
       

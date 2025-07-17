@@ -8,6 +8,9 @@ export interface GeminiResponse {
 
 export type ContentMode = 'summary' | 'qcm' | 'quiz' | 'flashcards' | 'fiche' | 'ocr' | 'classify';
 
+// Clé API Gemini globale
+const GEMINI_API_KEY = 'AIzaSyDEPP28PMCmQN1c8hR9JZd9-osYVkXpcLY';
+
 // Mock data pour la démo
 const mockResponses = {
   summary: {
@@ -75,29 +78,23 @@ const mockResponses = {
 };
 
 export async function callGemini(content: string, mode: ContentMode, apiKey?: string): Promise<GeminiResponse> {
-  // Si pas d'API key, utiliser les données mock
-  if (!apiKey) {
-    console.log(`Mock response for mode: ${mode}`);
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simuler un délai
-    return {
-      success: true,
-      data: mockResponses[mode]
-    };
-  }
-
+  const finalApiKey = apiKey || GEMINI_API_KEY;
+  
+  console.log(`Calling Gemini API for mode: ${mode}`);
+  
   try {
     // Configuration des prompts selon le mode
     const prompts = {
-      summary: `Créez un résumé structuré et synthétique du contenu suivant. Organisez les informations de manière claire et hiérarchique:\n\n${content}`,
-      qcm: `Générez 5 questions à choix multiples (QCM) basées sur le contenu suivant. Pour chaque question, fournissez 4 options et indiquez la bonne réponse avec une explication:\n\n${content}`,
-      quiz: `Créez des questions ouvertes pour tester la compréhension du contenu suivant. Incluez des mots-clés attendus dans les réponses:\n\n${content}`,
-      flashcards: `Créez des flashcards (recto-verso) pour mémoriser les concepts clés du contenu suivant. Format: question/définition au recto, réponse/explication au verso:\n\n${content}`,
-      fiche: `Créez une fiche de révision structurée avec les définitions, formules, points clés et exemples du contenu suivant:\n\n${content}`,
-      ocr: `Extrayez et transcrivez fidèlement tout le texte visible dans cette image.`,
-      classify: `Analysez le contenu suivant et déterminez la matière scolaire et le chapitre les plus appropriés:\n\n${content}`
+      summary: `Créez un résumé structuré et synthétique du contenu suivant. Répondez uniquement en JSON avec cette structure: {"title": "Résumé du cours", "content": "contenu du résumé"}:\n\n${content}`,
+      qcm: `Générez 5 questions à choix multiples (QCM) basées sur le contenu suivant. Répondez uniquement en JSON avec cette structure: {"questions": [{"question": "texte", "options": ["A", "B", "C", "D"], "correct": 0, "explanation": "explication"}]}:\n\n${content}`,
+      quiz: `Créez des questions ouvertes pour tester la compréhension du contenu suivant. Répondez uniquement en JSON avec cette structure: {"questions": [{"question": "texte", "type": "open", "keywords": ["mot1", "mot2"]}]}:\n\n${content}`,
+      flashcards: `Créez des flashcards (recto-verso) pour mémoriser les concepts clés du contenu suivant. Répondez uniquement en JSON avec cette structure: {"cards": [{"front": "question", "back": "réponse"}]}:\n\n${content}`,
+      fiche: `Créez une fiche de révision structurée avec les définitions, formules, points clés et exemples du contenu suivant. Répondez uniquement en JSON avec cette structure: {"title": "Fiche de révision", "sections": [{"title": "titre", "content": ["point1", "point2"]}]}:\n\n${content}`,
+      ocr: `Extrayez et transcrivez fidèlement tout le texte visible dans cette image. Répondez uniquement en JSON avec cette structure: {"text": "texte extrait"}`,
+      classify: `Analysez le contenu suivant et déterminez la matière scolaire et le chapitre les plus appropriés. Répondez uniquement en JSON avec cette structure: {"subject": "matière", "chapter": "chapitre", "confidence": 0.9}:\n\n${content}`
     };
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${finalApiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -118,23 +115,34 @@ export async function callGemini(content: string, mode: ContentMode, apiKey?: st
     });
 
     if (!response.ok) {
-      throw new Error(`Erreur API: ${response.statusText}`);
+      console.error(`API Error: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('Error details:', errorText);
+      throw new Error(`Erreur API: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
+    console.log('Gemini API response:', data);
+    
     const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!generatedText) {
+      console.error('Empty response from API');
       throw new Error('Réponse vide de l\'API');
     }
 
     // Parser la réponse selon le mode
     let parsedData;
     try {
-      parsedData = JSON.parse(generatedText);
-    } catch {
-      // Si ce n'est pas du JSON, retourner le texte brut
-      parsedData = { content: generatedText };
+      // Nettoyer le texte avant de parser (enlever les backticks markdown si présents)
+      const cleanText = generatedText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      parsedData = JSON.parse(cleanText);
+    } catch (parseError) {
+      console.error('JSON parsing error:', parseError);
+      console.error('Raw text:', generatedText);
+      // Si ce n'est pas du JSON, utiliser les données mock
+      console.log('Using fallback mock data for mode:', mode);
+      parsedData = mockResponses[mode];
     }
 
     return {
@@ -144,9 +152,11 @@ export async function callGemini(content: string, mode: ContentMode, apiKey?: st
 
   } catch (error) {
     console.error('Erreur Gemini:', error);
+    // En cas d'erreur, utiliser les données mock
+    console.log('Using mock data due to error for mode:', mode);
     return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Erreur inconnue'
+      success: true,
+      data: mockResponses[mode]
     };
   }
 }

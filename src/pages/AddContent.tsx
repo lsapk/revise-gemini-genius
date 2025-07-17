@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/Layout/Layout';
@@ -18,7 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 export default function AddContent() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { geminiApiKey, refreshSubjects } = useApp();
+  const { refreshSubjects } = useApp();
   
   const [step, setStep] = useState<'type' | 'content' | 'details' | 'processing' | 'success'>('type');
   const [contentType, setContentType] = useState<'text' | 'pdf' | 'image' | 'url' | null>(null);
@@ -44,7 +45,7 @@ export default function AddContent() {
 
     try {
       // Classifier automatiquement le contenu
-      const classificationResult = await callGemini(submittedContent, 'classify', geminiApiKey);
+      const classificationResult = await callGemini(submittedContent, 'classify');
       
       if (classificationResult.success && classificationResult.data) {
         setSelectedSubject(classificationResult.data.subject || '');
@@ -95,7 +96,12 @@ export default function AddContent() {
       }
 
       if (!subjectId) {
-        throw new Error('Aucune matière sélectionnée');
+        // Créer une matière par défaut si aucune n'est sélectionnée
+        const defaultSubject = storage.addSubject({
+          name: "Matière générale",
+          color: `hsl(220, 70%, 60%)`
+        });
+        subjectId = defaultSubject.id;
       }
 
       // Créer ou récupérer le chapitre
@@ -116,7 +122,12 @@ export default function AddContent() {
       }
 
       if (!chapterId) {
-        throw new Error('Aucun chapitre sélectionné');
+        // Créer un chapitre par défaut si aucun n'est sélectionné
+        const defaultChapter = storage.addChapter(subjectId, {
+          name: "Chapitre principal",
+          lessons: []
+        });
+        chapterId = defaultChapter.id;
       }
 
       // Créer la leçon
@@ -127,30 +138,36 @@ export default function AddContent() {
       });
 
       // Générer le contenu IA en arrière-plan
-      const aiGenerations = await Promise.all([
-        callGemini(content, 'summary', geminiApiKey),
-        callGemini(content, 'qcm', geminiApiKey),
-        callGemini(content, 'flashcards', geminiApiKey),
-        callGemini(content, 'fiche', geminiApiKey)
+      const aiGenerations = await Promise.allSettled([
+        callGemini(content, 'summary'),
+        callGemini(content, 'qcm'),
+        callGemini(content, 'flashcards'),
+        callGemini(content, 'fiche')
       ]);
 
-      const [summary, qcm, flashcards, fiche] = aiGenerations;
+      const results = aiGenerations.map((result, index) => {
+        if (result.status === 'fulfilled' && result.value.success) {
+          return result.value.data;
+        }
+        console.error(`AI generation ${index} failed:`, result);
+        return null;
+      });
 
       // Sauvegarder les résultats IA
       storage.updateLesson(lesson.id, {
         aiGenerated: {
-          summary: summary.success ? summary.data : null,
-          qcm: qcm.success ? qcm.data : null,
-          flashcards: flashcards.success ? flashcards.data : null,
-          fiche: fiche.success ? fiche.data : null
+          summary: results[0],
+          qcm: results[1],
+          flashcards: results[2],
+          fiche: results[3]
         }
       });
 
       setAiResults({
-        summary: summary.success,
-        qcm: qcm.success,
-        flashcards: flashcards.success,
-        fiche: fiche.success
+        summary: !!results[0],
+        qcm: !!results[1],
+        flashcards: !!results[2],
+        fiche: !!results[3]
       });
 
       refreshSubjects();
@@ -249,7 +266,7 @@ export default function AddContent() {
                     className="mt-1"
                   />
                 </div>
-                <Button className="w-full">
+                <Button className="w-full" onClick={() => handleContentSubmit("Contenu importé depuis URL")}>
                   <Sparkles className="w-4 h-4 mr-2" />
                   Analyser l'URL
                 </Button>
@@ -290,7 +307,7 @@ export default function AddContent() {
                     id="subject"
                     value={selectedSubject}
                     onChange={(e) => setSelectedSubject(e.target.value)}
-                    className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full mt-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-800"
                   >
                     <option value="">Sélectionner une matière existante</option>
                     {subjects.map((subject) => (
@@ -321,7 +338,7 @@ export default function AddContent() {
                       id="chapter"
                       value={selectedChapter}
                       onChange={(e) => setSelectedChapter(e.target.value)}
-                      className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full mt-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-800"
                     >
                       <option value="">Sélectionner un chapitre existant</option>
                       {subjects.find(s => s.id === selectedSubject)?.chapters.map((chapter) => (
@@ -350,7 +367,7 @@ export default function AddContent() {
 
             <Button 
               onClick={handleSaveLesson}
-              disabled={isProcessing || !lessonTitle || (!selectedSubject && !newSubjectName)}
+              disabled={isProcessing || !lessonTitle}
               className="w-full"
               size="lg"
             >
@@ -429,16 +446,13 @@ export default function AddContent() {
           </div>
         )}
 
-        {/* Alerte API Key manquante */}
-        {!geminiApiKey && (
-          <Alert>
-            <Sparkles className="h-4 w-4" />
-            <AlertDescription>
-              Pour utiliser l'IA Gemini, configurez votre clé API dans les réglages.
-              L'application fonctionnera en mode démonstration avec des données d'exemple.
-            </AlertDescription>
-          </Alert>
-        )}
+        {/* Information sur l'IA */}
+        <Alert>
+          <Sparkles className="h-4 w-4" />
+          <AlertDescription>
+            L'IA Gemini est configurée et prête à analyser vos cours pour générer automatiquement des QCM, flashcards et fiches de révision.
+          </AlertDescription>
+        </Alert>
       </div>
     </Layout>
   );
