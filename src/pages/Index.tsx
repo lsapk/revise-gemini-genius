@@ -1,10 +1,10 @@
 
 import { Layout } from '@/components/Layout/Layout';
-import { SubjectCard } from '@/components/Home/SubjectCard';
-import { QuickActions } from '@/components/Home/QuickActions';
-import { RecentActivity } from '@/components/Home/RecentActivity';
+import { ModernSubjectCard } from '@/components/Home/ModernSubjectCard';
+import { ModernQuickActions } from '@/components/Home/ModernQuickActions';
+import { ModernCard, ModernCardContent, ModernCardHeader, ModernCardTitle } from '@/components/ui/modern-card';
 import { useApp } from '@/contexts/AppContext';
-import { Plus, Sparkles } from 'lucide-react';
+import { Plus, Sparkles, BookOpen, TrendingUp, Target, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
@@ -13,81 +13,107 @@ const Index = () => {
 
   return (
     <Layout>
-      <div className="p-4 space-y-6">
+      <div className="min-h-screen">
         {/* Message de bienvenue si pas de matières */}
         {subjects.length === 0 && (
-          <div className="text-center py-12">
-            <div className="w-20 h-20 mx-auto mb-6 bg-primary/10 rounded-full flex items-center justify-center">
-              <Sparkles className="w-10 h-10 text-primary" />
-            </div>
-            <h2 className="text-2xl font-bold mb-3">Bienvenue sur ReviseGenius !</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-sm mx-auto">
-              Commencez votre révision intelligente en ajoutant votre premier cours.
-            </p>
-            <Link to="/add">
-              <Button size="lg" className="gradient-bg">
-                <Plus className="w-5 h-5 mr-2" />
-                Ajouter mon premier cours
-              </Button>
-            </Link>
-          </div>
-        )}
-
-        {/* Actions rapides */}
-        {subjects.length > 0 && (
-          <section>
-            <h2 className="text-xl font-bold mb-4">Actions rapides</h2>
-            <QuickActions />
-          </section>
-        )}
-
-        {/* Matières */}
-        {subjects.length > 0 && (
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">Mes matières</h2>
+          <div className="flex items-center justify-center min-h-[80vh] px-6">
+            <div className="text-center max-w-md mx-auto">
+              <div className="w-24 h-24 mx-auto mb-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-primary-500/30 animate-float">
+                <Sparkles className="w-12 h-12 text-white" />
+              </div>
+              <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent">
+                Bienvenue sur ReviseGenius !
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg leading-relaxed">
+                Révolutionnez votre apprentissage avec notre IA qui génère automatiquement des quiz, résumés et flashcards à partir de vos cours.
+              </p>
               <Link to="/add">
-                <Button size="sm" variant="outline">
-                  <Plus className="w-4 h-4 mr-1" />
-                  Ajouter
+                <Button 
+                  size="lg" 
+                  className="bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-lg shadow-primary-500/30 hover:shadow-xl hover:shadow-primary-500/40 transition-all duration-300 transform hover:scale-105 px-8 py-4 text-lg"
+                >
+                  <Plus className="w-6 h-6 mr-3" />
+                  Créer mon premier cours
                 </Button>
               </Link>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {subjects.map((subject) => (
-                <SubjectCard
-                  key={subject.id}
-                  subject={subject}
-                  stats={stats.subjectStats[subject.id]}
-                />
-              ))}
-            </div>
-          </section>
+          </div>
         )}
 
-        {/* Activité récente */}
         {subjects.length > 0 && (
-          <section>
-            <RecentActivity />
-          </section>
-        )}
+          <div className="p-6 space-y-8">
+            {/* Statistiques en haut */}
+            {stats.sessionsCompleted > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <ModernCard className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 border-blue-200 dark:border-blue-800">
+                  <ModernCardContent className="p-4 text-center">
+                    <Clock className="w-8 h-8 mx-auto mb-2 text-blue-600" />
+                    <p className="text-2xl font-bold text-blue-600">{stats.totalStudyTime}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Minutes étudiées</p>
+                  </ModernCardContent>
+                </ModernCard>
 
-        {/* Statistiques rapides */}
-        {stats.sessionsCompleted > 0 && (
-          <section className="grid grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
-              <p className="text-2xl font-bold text-blue-600">{stats.totalStudyTime}</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Minutes étudiées</p>
-            </div>
-            <div className="text-center p-4 bg-green-50 dark:bg-green-950/20 rounded-lg">
-              <p className="text-2xl font-bold text-green-600">{Math.round(stats.averageScore)}%</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Score moyen</p>
-            </div>
-            <div className="text-center p-4 bg-purple-50 dark:bg-purple-950/20 rounded-lg">
-              <p className="text-2xl font-bold text-purple-600">{stats.sessionsCompleted}</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Sessions</p>
-            </div>
-          </section>
+                <ModernCard className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20 border-green-200 dark:border-green-800">
+                  <ModernCardContent className="p-4 text-center">
+                    <Target className="w-8 h-8 mx-auto mb-2 text-green-600" />
+                    <p className="text-2xl font-bold text-green-600">{Math.round(stats.averageScore)}%</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Score moyen</p>
+                  </ModernCardContent>
+                </ModernCard>
+
+                <ModernCard className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20 border-purple-200 dark:border-purple-800">
+                  <ModernCardContent className="p-4 text-center">
+                    <TrendingUp className="w-8 h-8 mx-auto mb-2 text-purple-600" />
+                    <p className="text-2xl font-bold text-purple-600">{stats.sessionsCompleted}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Sessions</p>
+                  </ModernCardContent>
+                </ModernCard>
+
+                <ModernCard className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/20 border-orange-200 dark:border-orange-800">
+                  <ModernCardContent className="p-4 text-center">
+                    <BookOpen className="w-8 h-8 mx-auto mb-2 text-orange-600" />
+                    <p className="text-2xl font-bold text-orange-600">{subjects.length}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Matières</p>
+                  </ModernCardContent>
+                </ModernCard>
+              </div>
+            )}
+
+            {/* Actions rapides */}
+            <ModernQuickActions />
+
+            {/* Mes matières */}
+            <ModernCard>
+              <ModernCardHeader>
+                <div className="flex items-center justify-between">
+                  <ModernCardTitle className="flex items-center gap-3">
+                    <BookOpen className="w-6 h-6 text-primary-500" />
+                    Mes matières
+                  </ModernCardTitle>
+                  <Link to="/add">
+                    <Button 
+                      size="sm" 
+                      className="bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-lg shadow-primary-500/30"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Ajouter
+                    </Button>
+                  </Link>
+                </div>
+              </ModernCardHeader>
+              <ModernCardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {subjects.map((subject) => (
+                    <ModernSubjectCard
+                      key={subject.id}
+                      subject={subject}
+                      stats={stats.subjectStats[subject.id]}
+                    />
+                  ))}
+                </div>
+              </ModernCardContent>
+            </ModernCard>
+          </div>
         )}
       </div>
     </Layout>
