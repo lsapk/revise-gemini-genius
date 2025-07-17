@@ -1,0 +1,27 @@
+
+{
+  "name": "ReviseGenius - Révision Intelligente",
+  "short_name": "ReviseGenius",
+  "description": "Application de révision intelligente avec IA pour lycéens",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/placeholder.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/placeholder.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["education", "productivity"],
+  "lang": "fr",
+  "scope": "/",
+  "prefer_related_applications": false
+}

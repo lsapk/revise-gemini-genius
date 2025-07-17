@@ -1,0 +1,152 @@
+
+// Configuration et utilitaires pour l'API Gemini
+export interface GeminiResponse {
+  success: boolean;
+  data?: any;
+  error?: string;
+}
+
+export type ContentMode = 'summary' | 'qcm' | 'quiz' | 'flashcards' | 'fiche' | 'ocr' | 'classify';
+
+// Mock data pour la démo
+const mockResponses = {
+  summary: {
+    title: "Résumé du cours",
+    content: "Voici un résumé structuré du contenu fourni avec les points clés organisés de manière claire et synthétique."
+  },
+  qcm: {
+    questions: [
+      {
+        question: "Quelle est la capitale de la France ?",
+        options: ["Paris", "Lyon", "Marseille", "Toulouse"],
+        correct: 0,
+        explanation: "Paris est la capitale de la France depuis 508."
+      },
+      {
+        question: "Combien font 2 + 2 ?",
+        options: ["3", "4", "5", "6"],
+        correct: 1,
+        explanation: "2 + 2 = 4, c'est une addition basique."
+      }
+    ]
+  },
+  quiz: {
+    questions: [
+      {
+        question: "Expliquez le concept principal de ce cours",
+        type: "open",
+        keywords: ["concept", "principe", "définition"]
+      }
+    ]
+  },
+  flashcards: {
+    cards: [
+      {
+        front: "Définition du concept principal",
+        back: "Le concept principal représente l'idée centrale développée dans ce cours."
+      },
+      {
+        front: "Point clé n°1",
+        back: "Description détaillée du premier point important à retenir."
+      }
+    ]
+  },
+  fiche: {
+    title: "Fiche de révision",
+    sections: [
+      {
+        title: "Définitions importantes",
+        content: ["Concept 1: définition", "Concept 2: définition"]
+      },
+      {
+        title: "Points clés à retenir",
+        content: ["Point 1", "Point 2", "Point 3"]
+      }
+    ]
+  },
+  ocr: {
+    text: "Texte extrait de l'image via OCR"
+  },
+  classify: {
+    subject: "Mathématiques",
+    chapter: "Algèbre",
+    confidence: 0.9
+  }
+};
+
+export async function callGemini(content: string, mode: ContentMode, apiKey?: string): Promise<GeminiResponse> {
+  // Si pas d'API key, utiliser les données mock
+  if (!apiKey) {
+    console.log(`Mock response for mode: ${mode}`);
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Simuler un délai
+    return {
+      success: true,
+      data: mockResponses[mode]
+    };
+  }
+
+  try {
+    // Configuration des prompts selon le mode
+    const prompts = {
+      summary: `Créez un résumé structuré et synthétique du contenu suivant. Organisez les informations de manière claire et hiérarchique:\n\n${content}`,
+      qcm: `Générez 5 questions à choix multiples (QCM) basées sur le contenu suivant. Pour chaque question, fournissez 4 options et indiquez la bonne réponse avec une explication:\n\n${content}`,
+      quiz: `Créez des questions ouvertes pour tester la compréhension du contenu suivant. Incluez des mots-clés attendus dans les réponses:\n\n${content}`,
+      flashcards: `Créez des flashcards (recto-verso) pour mémoriser les concepts clés du contenu suivant. Format: question/définition au recto, réponse/explication au verso:\n\n${content}`,
+      fiche: `Créez une fiche de révision structurée avec les définitions, formules, points clés et exemples du contenu suivant:\n\n${content}`,
+      ocr: `Extrayez et transcrivez fidèlement tout le texte visible dans cette image.`,
+      classify: `Analysez le contenu suivant et déterminez la matière scolaire et le chapitre les plus appropriés:\n\n${content}`
+    };
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: prompts[mode]
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 2048,
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Erreur API: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!generatedText) {
+      throw new Error('Réponse vide de l\'API');
+    }
+
+    // Parser la réponse selon le mode
+    let parsedData;
+    try {
+      parsedData = JSON.parse(generatedText);
+    } catch {
+      // Si ce n'est pas du JSON, retourner le texte brut
+      parsedData = { content: generatedText };
+    }
+
+    return {
+      success: true,
+      data: parsedData
+    };
+
+  } catch (error) {
+    console.error('Erreur Gemini:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur inconnue'
+    };
+  }
+}
