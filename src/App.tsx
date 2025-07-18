@@ -9,6 +9,7 @@ import SubjectDetail from '@/pages/SubjectDetail';
 import LessonDetail from '@/pages/LessonDetail';
 import Stats from '@/pages/Stats';
 import Settings from '@/pages/Settings';
+import Assistant from '@/pages/Assistant';
 import NotFound from '@/pages/NotFound';
 import './App.css';
 
@@ -26,6 +27,7 @@ function App() {
             <Route path="/lesson/:id" element={<LessonDetail />} />
             <Route path="/stats" element={<Stats />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/assistant" element={<Assistant />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster />
