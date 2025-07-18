@@ -8,9 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, Eye, EyeOff, Sparkles } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Auth() {
   const { user, signIn, signUp, loading: authLoading } = useAuth();
+  const { toast } = useToast();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -40,20 +42,35 @@ export default function Auth() {
         : await signUp(email, password, displayName);
 
       if (error) {
+        console.error('Auth error:', error);
         if (error.message.includes('Invalid login credentials')) {
           setError('Email ou mot de passe incorrect');
         } else if (error.message.includes('User already registered')) {
           setError('Un compte existe déjà avec cet email');
         } else if (error.message.includes('Password should be at least')) {
           setError('Le mot de passe doit contenir au moins 6 caractères');
+        } else if (error.message.includes('Signup not allowed')) {
+          setError('L\'inscription n\'est pas autorisée pour le moment');
         } else {
           setError(error.message);
         }
       } else if (!isLogin) {
-        setError('');
-        alert('Inscription réussie ! Vérifiez votre email pour confirmer votre compte.');
+        toast({
+          title: "Compte créé avec succès !",
+          description: "Vous pouvez maintenant vous connecter avec vos identifiants.",
+        });
+        // Automatically switch to login after successful signup
+        setIsLogin(true);
+        setPassword('');
+        setDisplayName('');
+      } else {
+        toast({
+          title: "Connexion réussie !",
+          description: "Vous êtes maintenant connecté.",
+        });
       }
     } catch (err) {
+      console.error('Unexpected error:', err);
       setError('Une erreur inattendue s\'est produite');
     } finally {
       setLoading(false);
@@ -100,7 +117,7 @@ export default function Auth() {
             <CardDescription className="text-center">
               {isLogin 
                 ? 'Connectez-vous à votre compte' 
-                : 'Créez votre compte pour commencer'
+                : 'Créez votre compte - connexion immédiate'
               }
             </CardDescription>
           </CardHeader>
@@ -196,7 +213,7 @@ export default function Auth() {
         </Card>
 
         <div className="text-center text-sm text-gray-500 dark:text-gray-400">
-          <p>En vous connectant, vous acceptez nos conditions d'utilisation</p>
+          <p>Connexion instantanée - aucune confirmation email requise</p>
         </div>
       </div>
     </div>
