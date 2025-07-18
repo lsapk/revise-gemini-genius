@@ -5,39 +5,35 @@ import { ModernQuickActions } from '@/components/Home/ModernQuickActions';
 import { ModernSubjectCard } from '@/components/Home/ModernSubjectCard';
 import { ModernCard, ModernCardContent, ModernCardHeader, ModernCardTitle } from '@/components/ui/modern-card';
 import { useApp } from '@/contexts/AppContext';
-import { storage, Subject } from '@/lib/storage';
+import { useAuth } from '@/contexts/AuthContext';
 import { BookOpen, TrendingUp, Clock, Trophy } from 'lucide-react';
 
 export default function Index() {
-  const { subjects, stats, refreshSubjects, refreshStats } = useApp();
+  const { user } = useAuth();
+  const { subjects, stats, deleteSubject } = useApp();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    refreshSubjects();
-    refreshStats();
-    setIsLoading(false);
-  }, [refreshSubjects, refreshStats]);
+    // Les données sont maintenant chargées via useSupabaseStorage dans AppContext
+    if (user) {
+      setIsLoading(false);
+    }
+  }, [user, subjects]);
 
-  const handleDeleteSubject = (subjectId: string) => {
+  const handleDeleteSubject = async (subjectId: string) => {
     try {
-      storage.deleteSubject(subjectId);
-      refreshSubjects();
-      refreshStats();
+      await deleteSubject(subjectId);
     } catch (error) {
       console.error('Erreur lors de la suppression:', error);
     }
   };
 
-  const handleEditSubject = (subject: Subject) => {
+  const handleEditSubject = (subject: any) => {
     // TODO: Ouvrir un modal d'édition
     const newName = prompt('Nouveau nom de la matière:', subject.name);
     if (newName && newName.trim()) {
-      try {
-        storage.updateSubject(subject.id, { name: newName.trim() });
-        refreshSubjects();
-      } catch (error) {
-        console.error('Erreur lors de la modification:', error);
-      }
+      // TODO: Implémenter la modification avec Supabase
+      console.log('Modification de la matière:', subject.id, newName);
     }
   };
 

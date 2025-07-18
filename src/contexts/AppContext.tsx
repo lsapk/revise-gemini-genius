@@ -1,83 +1,83 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { storage, Subject, Lesson, StudySession, UserStats } from '@/lib/storage';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseStorage } from '@/hooks/useSupabaseStorage';
 
 interface AppContextType {
-  subjects: Subject[];
-  currentLesson: Lesson | null;
+  subjects: any[];
+  currentLesson: any | null;
   isDarkMode: boolean;
   geminiApiKey: string;
-  stats: UserStats;
+  stats: any;
   
   // Actions
   refreshSubjects: () => void;
-  setCurrentLesson: (lesson: Lesson | null) => void;
+  setCurrentLesson: (lesson: any | null) => void;
   toggleDarkMode: () => void;
   setGeminiApiKey: (key: string) => void;
-  addStudySession: (session: Omit<StudySession, 'id' | 'createdAt'>) => void;
+  addStudySession: (session: any) => void;
   refreshStats: () => void;
+  addSubject: (name: string, description?: string, color?: string) => Promise<any>;
+  deleteSubject: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [geminiApiKey, setGeminiApiKeyState] = useState('');
-  const [stats, setStats] = useState<UserStats>({
+  const { user } = useAuth();
+  const { settings, subjects, saveSettings, addSubject: addSubjectToDb, deleteSubject: deleteSubjectFromDb, refreshSubjects } = useSupabaseStorage();
+  
+  const [currentLesson, setCurrentLesson] = useState<any | null>(null);
+  const [stats] = useState<any>({
     totalStudyTime: 0,
     sessionsCompleted: 0,
     averageScore: 0,
     subjectStats: {}
   });
 
+  const isDarkMode = settings.dark_mode || false;
+  const geminiApiKey = settings.gemini_api_key || '';
+
   useEffect(() => {
-    // Charger les données au démarrage
-    refreshSubjects();
-    refreshStats();
-    
-    const settings = storage.getSettings();
-    setIsDarkMode(settings.darkMode);
-    setGeminiApiKeyState(settings.geminiApiKey);
-    
     // Appliquer le mode sombre
-    if (settings.darkMode) {
+    if (isDarkMode) {
       document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
     }
-  }, []);
+  }, [isDarkMode]);
 
-  const refreshSubjects = () => {
-    setSubjects(storage.getSubjects());
-  };
-
-  const refreshStats = () => {
-    setStats(storage.getStats());
-  };
-
-  const toggleDarkMode = () => {
+  const toggleDarkMode = async () => {
     const newDarkMode = !isDarkMode;
-    setIsDarkMode(newDarkMode);
+    await saveSettings({ dark_mode: newDarkMode });
     
     if (newDarkMode) {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
-    
-    const settings = storage.getSettings();
-    storage.saveSettings({ ...settings, darkMode: newDarkMode });
   };
 
-  const setGeminiApiKey = (key: string) => {
-    setGeminiApiKeyState(key);
-    const settings = storage.getSettings();
-    storage.saveSettings({ ...settings, geminiApiKey: key });
+  const setGeminiApiKey = async (key: string) => {
+    await saveSettings({ gemini_api_key: key });
   };
 
-  const addStudySession = (session: Omit<StudySession, 'id' | 'createdAt'>) => {
-    storage.addStudySession(session);
-    refreshStats();
+  const addSubject = async (name: string, description?: string, color?: string) => {
+    return await addSubjectToDb(name, description, color);
+  };
+
+  const deleteSubject = async (id: string) => {
+    await deleteSubjectFromDb(id);
+  };
+
+  const addStudySession = (session: any) => {
+    // TODO: Implémenter avec Supabase
+    console.log('Session d\'étude ajoutée:', session);
+  };
+
+  const refreshStats = () => {
+    // TODO: Implémenter avec Supabase
+    console.log('Rafraîchissement des statistiques');
   };
 
   return (
@@ -92,7 +92,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       toggleDarkMode,
       setGeminiApiKey,
       addStudySession,
-      refreshStats
+      refreshStats,
+      addSubject,
+      deleteSubject
     }}>
       {children}
     </AppContext.Provider>

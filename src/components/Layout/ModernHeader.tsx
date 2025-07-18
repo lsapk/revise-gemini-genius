@@ -1,8 +1,8 @@
 
-import { ArrowLeft, Search, Menu, Bell, Settings, User, Sparkles } from 'lucide-react';
+import { ArrowLeft, Search, Bell, Sparkles } from 'lucide-react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { AuthenticatedHeader } from './AuthenticatedHeader';
 import { cn } from '@/lib/utils';
 
 interface ModernHeaderProps {
@@ -80,16 +80,10 @@ export function ModernHeader({ title, showBack = false, actions, className }: Mo
                 <Bell className="w-5 h-5" />
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary-500 rounded-full"></div>
               </Button>
-              
-              <Link to="/settings">
-                <Avatar className="w-9 h-9 cursor-pointer hover:ring-2 hover:ring-primary-200 transition-all">
-                  <AvatarFallback className="bg-gradient-to-br from-primary-500 to-primary-600 text-white font-semibold">
-                    <User className="w-4 h-4" />
-                  </AvatarFallback>
-                </Avatar>
-              </Link>
             </>
           )}
+          
+          <AuthenticatedHeader />
         </div>
       </div>
     </header>
