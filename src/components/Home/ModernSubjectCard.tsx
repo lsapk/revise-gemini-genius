@@ -9,7 +9,7 @@ import { Subject } from '@/lib/storage';
 interface ModernSubjectCardProps {
   subject: Subject;
   stats?: {
-    totalTime: number;
+    studyTime: number;
     averageScore: number;
     sessionsCount: number;
   };
@@ -59,7 +59,7 @@ export function ModernSubjectCard({ subject, stats }: ModernSubjectCardProps) {
                   <div className="flex items-center justify-center gap-1 mb-1">
                     <Clock className="w-3 h-3 text-blue-600" />
                   </div>
-                  <p className="text-sm font-semibold text-blue-600">{stats.totalTime}min</p>
+                  <p className="text-sm font-semibold text-blue-600">{stats.studyTime}min</p>
                   <p className="text-xs text-gray-600 dark:text-gray-400">Temps</p>
                 </div>
                 
