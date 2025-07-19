@@ -51,14 +51,7 @@ export default function Auth() {
         
         if (error) {
           console.error('❌ Échec de la connexion:', error);
-          
-          if (error.message?.includes('Invalid login credentials')) {
-            setError('Email ou mot de passe incorrect');
-          } else if (error.message?.includes('Email not confirmed')) {
-            setError('Veuillez confirmer votre email avant de vous connecter');
-          } else {
-            setError(`Erreur de connexion: ${error.message}`);
-          }
+          setError(error.message || 'Erreur de connexion');
         } else {
           console.log('✅ Connexion réussie');
           toast({
@@ -71,26 +64,34 @@ export default function Auth() {
         const { error } = await signUp(email, password, displayName);
 
         if (error) {
-          console.error('❌ Échec de l\'inscription:', error);
+          console.error('❌ Inscription:', error);
           
-          if (error.message?.includes('User already registered')) {
-            setError('Un compte existe déjà avec cet email');
-          } else if (error.message?.includes('Password should be at least')) {
-            setError('Le mot de passe doit contenir au moins 6 caractères');
+          // Gestion spéciale pour le message de succès
+          if (error.type === 'success') {
+            toast({
+              title: "Inscription réussie !",
+              description: error.message,
+            });
+            // Basculer vers le mode connexion
+            setIsLogin(true);
+            setDisplayName('');
+            setError('');
           } else {
-            setError(`Erreur d'inscription: ${error.message}`);
+            // Erreurs normales
+            if (error.message?.includes('User already registered')) {
+              setError('Un compte existe déjà avec cet email');
+            } else if (error.message?.includes('Password should be at least')) {
+              setError('Le mot de passe doit contenir au moins 6 caractères');
+            } else {
+              setError(error.message || 'Erreur d\'inscription');
+            }
           }
         } else {
           console.log('✅ Inscription réussie');
           toast({
             title: "Inscription réussie !",
-            description: "Votre compte a été créé. Vous pouvez maintenant vous connecter.",
+            description: "Votre compte a été créé avec succès.",
           });
-          
-          // Basculer vers le mode connexion
-          setIsLogin(true);
-          setDisplayName('');
-          setError('');
         }
       }
     } catch (err) {
@@ -237,7 +238,7 @@ export default function Auth() {
         </Card>
 
         <div className="text-center text-sm text-gray-500 dark:text-gray-400">
-          <p>Test simple : créez un compte puis connectez-vous</p>
+          <p>Créez un compte puis connectez-vous - pas besoin de confirmer l'email</p>
         </div>
       </div>
     </div>

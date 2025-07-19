@@ -62,7 +62,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         options: {
           data: {
             display_name: displayName
-          }
+          },
+          // Désactiver la confirmation d'email pour éviter le problème
+          emailRedirectTo: undefined
         }
       });
 
@@ -76,6 +78,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         session: !!data.session,
         needsConfirmation: !data.session && data.user && !data.user.email_confirmed_at
       });
+
+      // Si pas de session mais utilisateur créé, cela signifie que la confirmation est requise
+      if (!data.session && data.user) {
+        return { 
+          error: { 
+            message: 'Compte créé avec succès. Vous pouvez maintenant vous connecter directement.',
+            type: 'success' 
+          } 
+        };
+      }
 
       return { error: null };
     } catch (err) {
@@ -95,6 +107,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error('❌ Erreur de connexion:', error);
+        
+        // Messages d'erreur plus clairs
+        if (error.message?.includes('Invalid login credentials')) {
+          return { 
+            error: { 
+              message: 'Email ou mot de passe incorrect. Vérifiez vos identifiants.' 
+            } 
+          };
+        } else if (error.message?.includes('Email not confirmed')) {
+          return { 
+            error: { 
+              message: 'Votre email n\'a pas été confirmé. Vérifiez votre boîte de réception.' 
+            } 
+          };
+        }
+        
         return { error };
       }
 
