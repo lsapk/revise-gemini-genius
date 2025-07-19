@@ -20,80 +20,123 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    console.log('🔧 Configuration du gestionnaire d\'authentification...');
+    
+    // Configuration du listener d'état d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
+      async (event, session) => {
+        console.log('🔄 Changement d\'état d\'authentification:', event, session?.user?.email);
+        
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session check:', session?.user?.email);
+    // Vérification de la session existante
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('❌ Erreur lors de la récupération de la session:', error);
+      } else {
+        console.log('📋 Session existante:', session?.user?.email || 'Aucune session');
+      }
+      
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log('🧹 Nettoyage du listener d\'authentification');
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const signIn = async (email: string, password: string) => {
-    console.log('Tentative de connexion pour:', email);
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) {
-      console.error('Erreur de connexion:', error);
-    } else {
-      console.log('Connexion réussie');
+  const signUp = async (email: string, password: string, displayName?: string) => {
+    console.log('📝 Tentative d\'inscription pour:', email);
+    
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            display_name: displayName
+          }
+        }
+      });
+
+      if (error) {
+        console.error('❌ Erreur d\'inscription:', error);
+        return { error };
+      }
+
+      console.log('✅ Inscription réussie:', {
+        user: data.user?.email,
+        session: !!data.session,
+        needsConfirmation: !data.session && data.user && !data.user.email_confirmed_at
+      });
+
+      return { error: null };
+    } catch (err) {
+      console.error('💥 Erreur inattendue lors de l\'inscription:', err);
+      return { error: err };
     }
-    return { error };
   };
 
-  const signUp = async (email: string, password: string, displayName?: string) => {
-    console.log('Tentative d\'inscription pour:', email);
+  const signIn = async (email: string, password: string) => {
+    console.log('🔑 Tentative de connexion pour:', email);
     
-    // Inscription sans confirmation d'email requise
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/`,
-        data: {
-          display_name: displayName
-        }
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        console.error('❌ Erreur de connexion:', error);
+        return { error };
       }
-    });
-    
-    if (error) {
-      console.error('Erreur d\'inscription:', error);
-    } else {
-      console.log('Inscription - données retournées:', data);
-      console.log('Utilisateur créé:', data.user?.email);
-      console.log('Session créée:', !!data.session);
+
+      console.log('✅ Connexion réussie:', {
+        user: data.user?.email,
+        session: !!data.session
+      });
+
+      return { error: null };
+    } catch (err) {
+      console.error('💥 Erreur inattendue lors de la connexion:', err);
+      return { error: err };
     }
-    
-    return { error };
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    console.log('👋 Déconnexion...');
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('❌ Erreur lors de la déconnexion:', error);
+    } else {
+      console.log('✅ Déconnexion réussie');
+    }
   };
 
+  const value = {
+    user,
+    session,
+    loading,
+    signIn,
+    signUp,
+    signOut
+  };
+
+  console.log('🔍 État actuel de l\'authentification:', {
+    user: user?.email || 'Non connecté',
+    loading,
+    sessionExists: !!session
+  });
+
   return (
-    <AuthContext.Provider value={{
-      user,
-      session,
-      loading,
-      signIn,
-      signUp,
-      signOut
-    }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
@@ -102,7 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
+    throw new Error('useAuth doit être utilisé dans un AuthProvider');
   }
   return context;
 }

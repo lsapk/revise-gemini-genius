@@ -21,15 +21,23 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Redirect if already authenticated
+  // Redirection si déjà authentifié
   if (user && !authLoading) {
+    console.log('🔄 Utilisateur connecté, redirection vers la page principale');
     return <Navigate to="/" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🚀 Soumission du formulaire:', { isLogin, email, displayName });
+    
     if (!email || !password) {
-      setError('Veuillez remplir tous les champs obligatoires');
+      setError('Email et mot de passe requis');
+      return;
+    }
+
+    if (!isLogin && !displayName) {
+      setError('Nom d\'affichage requis pour l\'inscription');
       return;
     }
 
@@ -38,55 +46,55 @@ export default function Auth() {
 
     try {
       if (isLogin) {
-        console.log('Tentative de connexion');
+        console.log('🔑 Mode connexion');
         const { error } = await signIn(email, password);
         
         if (error) {
-          console.error('Erreur de connexion:', error);
-          if (error.message.includes('Invalid login credentials')) {
-            setError('Email ou mot de passe incorrect. Vérifiez vos identifiants.');
-          } else if (error.message.includes('Email not confirmed')) {
-            setError('Votre email n\'a pas été confirmé. Vérifiez votre boîte mail.');
+          console.error('❌ Échec de la connexion:', error);
+          
+          if (error.message?.includes('Invalid login credentials')) {
+            setError('Email ou mot de passe incorrect');
+          } else if (error.message?.includes('Email not confirmed')) {
+            setError('Veuillez confirmer votre email avant de vous connecter');
           } else {
-            setError(error.message);
+            setError(`Erreur de connexion: ${error.message}`);
           }
         } else {
-          console.log('Connexion réussie !');
+          console.log('✅ Connexion réussie');
           toast({
             title: "Connexion réussie !",
-            description: "Vous êtes maintenant connecté.",
+            description: "Bienvenue dans ReviseGenius",
           });
         }
       } else {
-        console.log('Tentative d\'inscription');
+        console.log('📝 Mode inscription');
         const { error } = await signUp(email, password, displayName);
 
         if (error) {
-          console.error('Erreur d\'inscription:', error);
-          if (error.message.includes('User already registered')) {
+          console.error('❌ Échec de l\'inscription:', error);
+          
+          if (error.message?.includes('User already registered')) {
             setError('Un compte existe déjà avec cet email');
-          } else if (error.message.includes('Password should be at least')) {
+          } else if (error.message?.includes('Password should be at least')) {
             setError('Le mot de passe doit contenir au moins 6 caractères');
-          } else if (error.message.includes('Signup not allowed')) {
-            setError('L\'inscription n\'est pas autorisée pour le moment');
           } else {
-            setError(error.message);
+            setError(`Erreur d'inscription: ${error.message}`);
           }
         } else {
-          console.log('Inscription réussie !');
+          console.log('✅ Inscription réussie');
           toast({
-            title: "Compte créé avec succès !",
-            description: "Vous pouvez maintenant vous connecter avec vos identifiants.",
+            title: "Inscription réussie !",
+            description: "Votre compte a été créé. Vous pouvez maintenant vous connecter.",
           });
-          // Automatically switch to login after successful signup
+          
+          // Basculer vers le mode connexion
           setIsLogin(true);
-          setPassword('');
           setDisplayName('');
           setError('');
         }
       }
     } catch (err) {
-      console.error('Erreur inattendue:', err);
+      console.error('💥 Erreur inattendue:', err);
       setError('Une erreur inattendue s\'est produite');
     } finally {
       setLoading(false);
@@ -133,7 +141,7 @@ export default function Auth() {
             <CardDescription className="text-center">
               {isLogin 
                 ? 'Connectez-vous à votre compte' 
-                : 'Créez votre compte - connexion immédiate'
+                : 'Créez votre compte ReviseGenius'
               }
             </CardDescription>
           </CardHeader>
@@ -142,19 +150,20 @@ export default function Auth() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {!isLogin && (
                 <div className="space-y-2">
-                  <Label htmlFor="displayName">Nom d'affichage</Label>
+                  <Label htmlFor="displayName">Nom d'affichage *</Label>
                   <Input
                     id="displayName"
                     type="text"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     placeholder="Votre nom"
+                    required={!isLogin}
                   />
                 </div>
               )}
               
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email *</Label>
                 <Input
                   id="email"
                   type="email"
@@ -166,7 +175,7 @@ export default function Auth() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="password">Mot de passe</Label>
+                <Label htmlFor="password">Mot de passe *</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -187,7 +196,7 @@ export default function Auth() {
                 </div>
                 {!isLogin && (
                   <p className="text-xs text-gray-500">
-                    Le mot de passe doit contenir au moins 6 caractères
+                    Minimum 6 caractères
                   </p>
                 )}
               </div>
@@ -211,10 +220,9 @@ export default function Auth() {
             <div className="mt-6 text-center">
               <button
                 onClick={() => {
+                  console.log('🔄 Basculement de mode:', isLogin ? 'vers inscription' : 'vers connexion');
                   setIsLogin(!isLogin);
                   setError('');
-                  setEmail('');
-                  setPassword('');
                   setDisplayName('');
                 }}
                 className="text-sm text-primary hover:underline"
@@ -229,7 +237,7 @@ export default function Auth() {
         </Card>
 
         <div className="text-center text-sm text-gray-500 dark:text-gray-400">
-          <p>Si vous rencontrez des problèmes, vérifiez la configuration Supabase</p>
+          <p>Test simple : créez un compte puis connectez-vous</p>
         </div>
       </div>
     </div>
