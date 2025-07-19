@@ -42,15 +42,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    console.log('Tentative de connexion pour:', email);
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+    if (error) {
+      console.error('Erreur de connexion:', error);
+    } else {
+      console.log('Connexion réussie');
+    }
     return { error };
   };
 
   const signUp = async (email: string, password: string, displayName?: string) => {
-    const { error } = await supabase.auth.signUp({
+    console.log('Tentative d\'inscription pour:', email);
+    
+    // Inscription sans confirmation d'email requise
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -60,6 +69,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     });
+    
+    if (error) {
+      console.error('Erreur d\'inscription:', error);
+    } else {
+      console.log('Inscription - données retournées:', data);
+      console.log('Utilisateur créé:', data.user?.email);
+      console.log('Session créée:', !!data.session);
+    }
+    
     return { error };
   };
 

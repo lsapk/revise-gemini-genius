@@ -37,40 +37,56 @@ export default function Auth() {
     setError('');
 
     try {
-      const { error } = isLogin 
-        ? await signIn(email, password)
-        : await signUp(email, password, displayName);
-
-      if (error) {
-        console.error('Auth error:', error);
-        if (error.message.includes('Invalid login credentials')) {
-          setError('Email ou mot de passe incorrect');
-        } else if (error.message.includes('User already registered')) {
-          setError('Un compte existe déjà avec cet email');
-        } else if (error.message.includes('Password should be at least')) {
-          setError('Le mot de passe doit contenir au moins 6 caractères');
-        } else if (error.message.includes('Signup not allowed')) {
-          setError('L\'inscription n\'est pas autorisée pour le moment');
+      if (isLogin) {
+        console.log('Tentative de connexion');
+        const { error } = await signIn(email, password);
+        
+        if (error) {
+          console.error('Erreur de connexion:', error);
+          if (error.message.includes('Invalid login credentials')) {
+            setError('Email ou mot de passe incorrect. Vérifiez vos identifiants.');
+          } else if (error.message.includes('Email not confirmed')) {
+            setError('Votre email n\'a pas été confirmé. Vérifiez votre boîte mail.');
+          } else {
+            setError(error.message);
+          }
         } else {
-          setError(error.message);
+          console.log('Connexion réussie !');
+          toast({
+            title: "Connexion réussie !",
+            description: "Vous êtes maintenant connecté.",
+          });
         }
-      } else if (!isLogin) {
-        toast({
-          title: "Compte créé avec succès !",
-          description: "Vous pouvez maintenant vous connecter avec vos identifiants.",
-        });
-        // Automatically switch to login after successful signup
-        setIsLogin(true);
-        setPassword('');
-        setDisplayName('');
       } else {
-        toast({
-          title: "Connexion réussie !",
-          description: "Vous êtes maintenant connecté.",
-        });
+        console.log('Tentative d\'inscription');
+        const { error } = await signUp(email, password, displayName);
+
+        if (error) {
+          console.error('Erreur d\'inscription:', error);
+          if (error.message.includes('User already registered')) {
+            setError('Un compte existe déjà avec cet email');
+          } else if (error.message.includes('Password should be at least')) {
+            setError('Le mot de passe doit contenir au moins 6 caractères');
+          } else if (error.message.includes('Signup not allowed')) {
+            setError('L\'inscription n\'est pas autorisée pour le moment');
+          } else {
+            setError(error.message);
+          }
+        } else {
+          console.log('Inscription réussie !');
+          toast({
+            title: "Compte créé avec succès !",
+            description: "Vous pouvez maintenant vous connecter avec vos identifiants.",
+          });
+          // Automatically switch to login after successful signup
+          setIsLogin(true);
+          setPassword('');
+          setDisplayName('');
+          setError('');
+        }
       }
     } catch (err) {
-      console.error('Unexpected error:', err);
+      console.error('Erreur inattendue:', err);
       setError('Une erreur inattendue s\'est produite');
     } finally {
       setLoading(false);
@@ -213,7 +229,7 @@ export default function Auth() {
         </Card>
 
         <div className="text-center text-sm text-gray-500 dark:text-gray-400">
-          <p>Connexion instantanée - aucune confirmation email requise</p>
+          <p>Si vous rencontrez des problèmes, vérifiez la configuration Supabase</p>
         </div>
       </div>
     </div>
