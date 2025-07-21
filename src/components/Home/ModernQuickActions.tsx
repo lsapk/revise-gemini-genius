@@ -1,6 +1,6 @@
 
 import { Link } from 'react-router-dom';
-import { Plus, Brain, Zap, BarChart3, Clock, Sparkles } from 'lucide-react';
+import { Plus, Brain, Zap, BarChart3, MessageCircle, Sparkles } from 'lucide-react';
 import { ModernCard, ModernCardContent } from '@/components/ui/modern-card';
 import { Button } from '@/components/ui/button';
 
@@ -15,11 +15,11 @@ export function ModernQuickActions() {
       special: true
     },
     {
-      title: 'Révision express',
-      description: 'Session de 5 min',
-      icon: Clock,
-      href: '/review',
-      gradient: 'from-purple-500 to-purple-600'
+      title: 'Assistant IA',
+      description: 'Chat intelligent',
+      icon: MessageCircle,
+      href: '/assistant',
+      gradient: 'from-blue-500 to-blue-600'
     },
     {
       title: 'Révision rapide',
