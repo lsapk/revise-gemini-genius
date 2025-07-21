@@ -18,10 +18,8 @@ import {
   User,
   Shield
 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
 
 export default function Settings() {
-  const { user } = useAuth();
   const { isDarkMode, toggleDarkMode, geminiApiKey, setGeminiApiKey } = useApp();
   const { toast } = useToast();
   
@@ -37,12 +35,6 @@ export default function Settings() {
   };
 
   const getDisplayName = () => {
-    if (user?.user_metadata?.display_name) {
-      return user.user_metadata.display_name;
-    }
-    if (user?.email) {
-      return user.email.split('@')[0];
-    }
     return 'Utilisateur';
   };
 
@@ -67,14 +59,14 @@ export default function Settings() {
               </div>
               <div>
                 <p className="font-semibold text-lg">{getDisplayName()}</p>
-                <p className="text-gray-600 dark:text-gray-400">{user?.email}</p>
+                <p className="text-gray-600 dark:text-gray-400">Mode hors ligne</p>
               </div>
             </div>
             
             <Alert>
               <Shield className="h-4 w-4" />
               <AlertDescription>
-                Vos données sont sécurisées et chiffrées. Seul vous avez accès à vos informations.
+                Vos données sont stockées localement sur votre appareil.
               </AlertDescription>
             </Alert>
           </CardContent>
@@ -191,7 +183,7 @@ export default function Settings() {
               </div>
               <div className="flex justify-between">
                 <span>Développé avec</span>
-                <span>React + Supabase</span>
+                <span>React + localStorage</span>
               </div>
               <div className="flex justify-between">
                 <span>IA</span>
@@ -199,13 +191,13 @@ export default function Settings() {
               </div>
               <div className="flex justify-between">
                 <span>Stockage</span>
-                <span>Supabase (sécurisé)</span>
+                <span>Local (navigateur)</span>
               </div>
             </div>
             
             <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
               <p className="text-xs text-gray-600 dark:text-gray-400 text-center">
-                ReviseGenius - Application de révision intelligente avec authentification et stockage sécurisé
+                ReviseGenius - Application de révision intelligente avec stockage local
               </p>
             </div>
           </CardContent>

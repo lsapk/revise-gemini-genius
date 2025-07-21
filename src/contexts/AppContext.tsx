@@ -1,6 +1,5 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { useSupabaseStorage } from '@/hooks/useSupabaseStorage';
 
 interface AppContextType {
@@ -24,7 +23,6 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
   const { settings, subjects, saveSettings, addSubject: addSubjectToDb, deleteSubject: deleteSubjectFromDb, refreshSubjects } = useSupabaseStorage();
   
   const [currentLesson, setCurrentLesson] = useState<any | null>(null);

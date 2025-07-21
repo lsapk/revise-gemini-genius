@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface UserSettings {
   gemini_api_key?: string;
@@ -20,145 +19,88 @@ interface Subject {
 }
 
 export function useSupabaseStorage() {
-  const { user } = useAuth();
   const [settings, setSettings] = useState<UserSettings>({});
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load user settings
+  // For now, we'll use localStorage as a fallback since there's no authentication
+  const STORAGE_KEY_SETTINGS = 'revise_genius_settings';
+  const STORAGE_KEY_SUBJECTS = 'revise_genius_subjects';
+
+  // Load user settings from localStorage
   const loadSettings = async () => {
-    if (!user) return;
-
     try {
-      const { data, error } = await supabase
-        .from('user_settings')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('Erreur lors du chargement des paramètres:', error);
-        return;
-      }
-
-      if (data) {
-        setSettings({
-          gemini_api_key: data.gemini_api_key,
-          dark_mode: data.dark_mode,
-          notifications_enabled: data.notifications_enabled
-        });
+      const savedSettings = localStorage.getItem(STORAGE_KEY_SETTINGS);
+      if (savedSettings) {
+        setSettings(JSON.parse(savedSettings));
       }
     } catch (error) {
       console.error('Erreur lors du chargement des paramètres:', error);
     }
   };
 
-  // Save settings
+  // Save settings to localStorage
   const saveSettings = async (newSettings: Partial<UserSettings>) => {
-    if (!user) return;
-
     try {
-      const { error } = await supabase
-        .from('user_settings')
-        .upsert({
-          id: user.id,
-          ...newSettings,
-          updated_at: new Date().toISOString()
-        });
-
-      if (error) {
-        console.error('Erreur lors de la sauvegarde des paramètres:', error);
-        return;
-      }
-
-      setSettings(prev => ({ ...prev, ...newSettings }));
+      const updatedSettings = { ...settings, ...newSettings };
+      localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(updatedSettings));
+      setSettings(updatedSettings);
     } catch (error) {
       console.error('Erreur lors de la sauvegarde des paramètres:', error);
     }
   };
 
-  // Load subjects
+  // Load subjects from localStorage
   const loadSubjects = async () => {
-    if (!user) return;
-
     try {
-      const { data, error } = await supabase
-        .from('subjects')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Erreur lors du chargement des matières:', error);
-        return;
+      const savedSubjects = localStorage.getItem(STORAGE_KEY_SUBJECTS);
+      if (savedSubjects) {
+        setSubjects(JSON.parse(savedSubjects));
       }
-
-      setSubjects(data || []);
     } catch (error) {
       console.error('Erreur lors du chargement des matières:', error);
     }
   };
 
-  // Add subject
+  // Add subject to localStorage
   const addSubject = async (name: string, description?: string, color: string = '#3B82F6') => {
-    if (!user) return null;
-
     try {
-      const { data, error } = await supabase
-        .from('subjects')
-        .insert({
-          user_id: user.id,
-          name,
-          description,
-          color
-        })
-        .select()
-        .single();
+      const newSubject = {
+        id: Date.now().toString(),
+        name,
+        description,
+        color,
+        lessons_count: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
 
-      if (error) {
-        console.error('Erreur lors de l\'ajout de la matière:', error);
-        return null;
-      }
-
-      setSubjects(prev => [data, ...prev]);
-      return data;
+      const updatedSubjects = [newSubject, ...subjects];
+      localStorage.setItem(STORAGE_KEY_SUBJECTS, JSON.stringify(updatedSubjects));
+      setSubjects(updatedSubjects);
+      return newSubject;
     } catch (error) {
       console.error('Erreur lors de l\'ajout de la matière:', error);
       return null;
     }
   };
 
-  // Delete subject
+  // Delete subject from localStorage
   const deleteSubject = async (subjectId: string) => {
-    if (!user) return;
-
     try {
-      const { error } = await supabase
-        .from('subjects')
-        .delete()
-        .eq('id', subjectId)
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error('Erreur lors de la suppression de la matière:', error);
-        return;
-      }
-
-      setSubjects(prev => prev.filter(s => s.id !== subjectId));
+      const updatedSubjects = subjects.filter(s => s.id !== subjectId);
+      localStorage.setItem(STORAGE_KEY_SUBJECTS, JSON.stringify(updatedSubjects));
+      setSubjects(updatedSubjects);
     } catch (error) {
       console.error('Erreur lors de la suppression de la matière:', error);
     }
   };
 
   useEffect(() => {
-    if (user) {
-      Promise.all([loadSettings(), loadSubjects()]).finally(() => {
-        setLoading(false);
-      });
-    } else {
+    Promise.all([loadSettings(), loadSubjects()]).finally(() => {
       setLoading(false);
-    }
-  }, [user]);
+    });
+  }, []);
 
   return {
     settings,
