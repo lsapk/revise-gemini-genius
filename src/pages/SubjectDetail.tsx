@@ -1,223 +1,190 @@
 
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { Layout } from '@/components/Layout/Layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ModernCard, ModernCardContent, ModernCardHeader, ModernCardTitle } from '@/components/ui/modern-card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { storage, Subject, Chapter, Lesson } from '@/lib/storage';
 import { useApp } from '@/contexts/AppContext';
 import { 
   BookOpen, 
   Plus, 
+  FileText, 
   Clock, 
-  Target,
-  ChevronRight,
-  Brain,
-  FileText,
-  Zap,
-  BarChart3
+  TrendingUp,
+  Edit,
+  Trash2,
+  Play
 } from 'lucide-react';
 
 export default function SubjectDetail() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { refreshSubjects } = useApp();
-  const [subject, setSubject] = useState<Subject | null>(null);
-  const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
+  const { subjectId } = useParams();
+  const { subjects, deleteSubject } = useApp();
+  const [subject, setSubject] = useState<any>(null);
+  const [lessons] = useState<any[]>([]); // Sera rempli avec les vraies données plus tard
 
   useEffect(() => {
-    if (id) {
-      const subjects = storage.getSubjects();
-      const foundSubject = subjects.find(s => s.id === id);
-      if (foundSubject) {
-        setSubject(foundSubject);
-        if (foundSubject.chapters.length > 0) {
-          setSelectedChapter(foundSubject.chapters[0]);
-        }
-      } else {
-        navigate('/');
-      }
+    const foundSubject = subjects.find(s => s.id === subjectId);
+    setSubject(foundSubject);
+  }, [subjectId, subjects]);
+
+  const handleDeleteSubject = async () => {
+    if (subject && window.confirm(`Êtes-vous sûr de vouloir supprimer la matière "${subject.name}" ?`)) {
+      await deleteSubject(subject.id);
+      window.history.back();
     }
-  }, [id, navigate]);
-
-  const handleLessonClick = (lesson: Lesson) => {
-    navigate(`/lesson/${lesson.id}`);
-  };
-
-  const handleCreateLesson = () => {
-    navigate('/add');
   };
 
   if (!subject) {
     return (
-      <Layout title="Chargement..." showBack>
-        <div className="flex items-center justify-center min-h-[50vh]">
-          <div className="text-center">
-            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p>Chargement de la matière...</p>
-          </div>
+      <Layout title="Matière introuvable">
+        <div className="max-w-4xl mx-auto p-4">
+          <ModernCard>
+            <ModernCardContent className="text-center py-12">
+              <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Matière introuvable</h3>
+              <p className="text-muted-foreground mb-6">
+                La matière que vous cherchez n'existe pas ou a été supprimée.
+              </p>
+              <Link to="/">
+                <Button>Retour à l'accueil</Button>
+              </Link>
+            </ModernCardContent>
+          </ModernCard>
         </div>
       </Layout>
     );
   }
 
-  const totalLessons = subject.chapters.reduce((acc, chapter) => acc + chapter.lessons.length, 0);
-  const progressPercentage = totalLessons > 0 ? (totalLessons * 25) : 0; // Simulation d'un progrès
-
   return (
-    <Layout 
-      title={subject.name} 
-      showBack
-      headerActions={
-        <Button onClick={handleCreateLesson} size="sm">
-          <Plus className="w-4 h-4 mr-2" />
-          Ajouter
-        </Button>
-      }
-    >
-      <div className="p-4 space-y-6 max-w-4xl mx-auto">
+    <Layout title={subject.name} showBack>
+      <div className="max-w-4xl mx-auto p-4 space-y-6">
+        
         {/* En-tête de la matière */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
+        <ModernCard>
+          <ModernCardHeader>
+            <div className="flex items-start justify-between">
               <div>
-                <CardTitle className="text-2xl mb-2">{subject.name}</CardTitle>
-                <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                  <div className="flex items-center gap-1">
-                    <BookOpen className="w-4 h-4" />
-                    <span>{subject.chapters.length} chapitre{subject.chapters.length > 1 ? 's' : ''}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <FileText className="w-4 h-4" />
-                    <span>{totalLessons} leçon{totalLessons > 1 ? 's' : ''}</span>
-                  </div>
-                </div>
+                <ModernCardTitle className="flex items-center gap-3">
+                  <div 
+                    className="w-3 h-8 rounded-full" 
+                    style={{ backgroundColor: subject.color }}
+                  />
+                  {subject.name}
+                </ModernCardTitle>
+                {subject.description && (
+                  <p className="text-muted-foreground mt-2">{subject.description}</p>
+                )}
               </div>
-              <div 
-                className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold"
-                style={{ backgroundColor: subject.color }}
-              >
-                {subject.name.charAt(0).toUpperCase()}
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm">
+                  <Edit className="w-4 h-4" />
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleDeleteSubject}>
+                  <Trash2 className="w-4 h-4" />
+                </Button>
               </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between text-sm">
-                <span>Progression globale</span>
-                <span>{Math.round(progressPercentage)}%</span>
+          </ModernCardHeader>
+          <ModernCardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="text-center p-4 bg-blue-50 dark:bg-blue-950/30 rounded-xl">
+                <FileText className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+                <p className="text-2xl font-bold text-blue-600">{lessons.length}</p>
+                <p className="text-sm text-muted-foreground">Chapitres</p>
               </div>
-              <Progress value={progressPercentage} className="h-2" />
+              <div className="text-center p-4 bg-green-50 dark:bg-green-950/30 rounded-xl">
+                <TrendingUp className="w-6 h-6 text-green-600 mx-auto mb-2" />
+                <p className="text-2xl font-bold text-green-600">--</p>
+                <p className="text-sm text-muted-foreground">Progression</p>
+              </div>
+              <div className="text-center p-4 bg-purple-50 dark:bg-purple-950/30 rounded-xl">
+                <Clock className="w-6 h-6 text-purple-600 mx-auto mb-2" />
+                <p className="text-2xl font-bold text-purple-600">--</p>
+                <p className="text-sm text-muted-foreground">Temps d'étude</p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          </ModernCardContent>
+        </ModernCard>
 
-        {/* Actions rapides */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <Button 
-            variant="outline" 
-            className="h-16 flex-col gap-2"
-            onClick={() => navigate('/add')}
-          >
-            <Plus className="w-5 h-5" />
-            <span className="text-xs">Nouveau cours</span>
-          </Button>
-          <Button 
-            variant="outline" 
-            className="h-16 flex-col gap-2"
-            disabled={totalLessons === 0}
-          >
-            <Brain className="w-5 h-5" />
-            <span className="text-xs">Quiz IA</span>
-          </Button>
-          <Button 
-            variant="outline" 
-            className="h-16 flex-col gap-2"
-            disabled={totalLessons === 0}
-          >
-            <Zap className="w-5 h-5" />
-            <span className="text-xs">Révision</span>
-          </Button>
-          <Button 
-            variant="outline" 
-            className="h-16 flex-col gap-2"
-            onClick={() => navigate('/stats')}
-          >
-            <BarChart3 className="w-5 h-5" />
-            <span className="text-xs">Statistiques</span>
-          </Button>
-        </div>
+        {/* Actions rapides - SANS les boutons de révision */}
+        <ModernCard>
+          <ModernCardHeader>
+            <ModernCardTitle>Actions</ModernCardTitle>
+          </ModernCardHeader>
+          <ModernCardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Link to="/add">
+                <Button className="w-full h-16 flex flex-col gap-2">
+                  <Plus className="w-5 h-5" />
+                  <span className="text-sm">Ajouter un chapitre</span>
+                </Button>
+              </Link>
+              <Link to="/stats">
+                <Button variant="outline" className="w-full h-16 flex flex-col gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  <span className="text-sm">Voir les statistiques</span>
+                </Button>
+              </Link>
+            </div>
+          </ModernCardContent>
+        </ModernCard>
 
-        {/* Liste des chapitres et leçons */}
-        {subject.chapters.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-12">
-              <BookOpen className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-              <h3 className="text-lg font-medium mb-2">Aucun cours pour le moment</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Commencez par ajouter votre premier cours dans cette matière
-              </p>
-              <Button onClick={handleCreateLesson}>
-                <Plus className="w-4 h-4 mr-2" />
-                Ajouter un cours
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            {subject.chapters.map((chapter) => (
-              <Card key={chapter.id}>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center justify-between">
-                    <span>{chapter.name}</span>
-                    <Badge variant="secondary">
-                      {chapter.lessons.length} leçon{chapter.lessons.length > 1 ? 's' : ''}
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {chapter.lessons.length === 0 ? (
-                    <div className="text-center py-6 text-gray-500">
-                      <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">Aucune leçon dans ce chapitre</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {chapter.lessons.map((lesson) => (
-                        <div
-                          key={lesson.id}
-                          onClick={() => handleLessonClick(lesson)}
-                          className="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                              <FileText className="w-5 h-5 text-primary" />
-                            </div>
-                            <div>
-                              <h4 className="font-medium">{lesson.title}</h4>
-                              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                                <Clock className="w-3 h-3" />
-                                <span>
-                                  {new Date(lesson.createdAt).toLocaleDateString('fr-FR')}
-                                </span>
-                                <Badge variant="outline" className="text-xs">
-                                  {lesson.type}
-                                </Badge>
-                              </div>
-                            </div>
-                          </div>
-                          <ChevronRight className="w-5 h-5 text-gray-400" />
+        {/* Liste des chapitres */}
+        <ModernCard>
+          <ModernCardHeader>
+            <div className="flex items-center justify-between">
+              <ModernCardTitle>Chapitres</ModernCardTitle>
+              <Badge variant="secondary">{lessons.length} chapitre{lessons.length > 1 ? 's' : ''}</Badge>
+            </div>
+          </ModernCardHeader>
+          <ModernCardContent>
+            {lessons.length === 0 ? (
+              <div className="text-center py-12">
+                <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Aucun chapitre</h3>
+                <p className="text-muted-foreground mb-6">
+                  Commencez par ajouter votre premier chapitre à cette matière.
+                </p>
+                <Link to="/add">
+                  <Button>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Ajouter un chapitre
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {lessons.map((lesson, index) => (
+                  <div
+                    key={lesson.id}
+                    className="p-4 border rounded-xl hover:shadow-md transition-all hover:border-primary/30"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                          <span className="text-sm font-medium text-primary">{index + 1}</span>
                         </div>
-                      ))}
+                        <div>
+                          <h3 className="font-medium">{lesson.title}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {lesson.type} • Ajouté le {new Date(lesson.createdAt).toLocaleDateString('fr-FR')}
+                          </p>
+                        </div>
+                      </div>
+                      <Link to={`/lesson/${lesson.id}`}>
+                        <Button size="sm" className="gap-2">
+                          <Play className="w-4 h-4" />
+                          Étudier
+                        </Button>
+                      </Link>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </ModernCardContent>
+        </ModernCard>
       </div>
     </Layout>
   );

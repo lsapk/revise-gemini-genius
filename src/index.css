@@ -5,7 +5,35 @@
 @tailwind utilities;
 
 :root {
-  /* Dark theme par défaut */
+  /* Light theme variables */
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 262 83% 58%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222.2 84% 4.9%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222.2 84% 4.9%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 262 83% 58%;
+  --radius: 0.75rem;
+  
+  /* Safe area variables for mobile */
+  --safe-area-inset-top: env(safe-area-inset-top);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom);
+}
+
+.dark {
+  /* Dark theme variables */
   --background: 222.2 84% 4.9%;
   --foreground: 210 40% 98%;
   --card: 222.2 84% 4.9%;
@@ -25,11 +53,6 @@
   --border: 217.2 32.6% 17.5%;
   --input: 217.2 32.6% 17.5%;
   --ring: 262 83% 58%;
-  --radius: 0.75rem;
-  
-  /* Safe area variables for mobile */
-  --safe-area-inset-top: env(safe-area-inset-top);
-  --safe-area-inset-bottom: env(safe-area-inset-bottom);
 }
 
 * {
@@ -68,7 +91,7 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(217.2, 32.6%, 12%);
+  background: hsl(var(--muted));
 }
 
 ::-webkit-scrollbar-thumb {
@@ -126,6 +149,10 @@ body {
 /* High contrast mode support */
 @media (prefers-contrast: high) {
   :root {
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+  }
+  .dark {
     --border: 0 0% 80%;
     --input: 0 0% 80%;
   }
