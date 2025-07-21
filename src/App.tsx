@@ -19,19 +19,21 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AppProvider>
-        <Router>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/add" element={<AddContent />} />
-            <Route path="/subject/:id" element={<SubjectDetail />} />
-            <Route path="/lesson/:id" element={<LessonDetail />} />
-            <Route path="/stats" element={<Stats />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/assistant" element={<Assistant />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <Toaster />
-        </Router>
+        <div className="min-h-screen bg-gray-950 text-gray-100">
+          <Router>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/add" element={<AddContent />} />
+              <Route path="/subject/:id" element={<SubjectDetail />} />
+              <Route path="/lesson/:id" element={<LessonDetail />} />
+              <Route path="/stats" element={<Stats />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/assistant" element={<Assistant />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <Toaster />
+          </Router>
+        </div>
       </AppProvider>
     </QueryClientProvider>
   );

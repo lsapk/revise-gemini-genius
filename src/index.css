@@ -5,42 +5,15 @@
 @tailwind utilities;
 
 :root {
-  /* Colors */
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 222.2 84% 4.9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 222.2 84% 4.9%;
-  --primary: 220 90% 56%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 220 14.3% 95.9%;
-  --secondary-foreground: 220 9% 46%;
-  --muted: 220 14.3% 95.9%;
-  --muted-foreground: 220 9% 46%;
-  --accent: 220 14.3% 95.9%;
-  --accent-foreground: 220 9% 46%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 220 13% 91%;
-  --input: 220 13% 91%;
-  --ring: 220 90% 56%;
-  --radius: 0.75rem;
-  
-  /* Safe area variables for mobile */
-  --safe-area-inset-top: env(safe-area-inset-top);
-  --safe-area-inset-bottom: env(safe-area-inset-bottom);
-}
-
-.dark {
+  /* Dark theme par défaut */
   --background: 222.2 84% 4.9%;
   --foreground: 210 40% 98%;
   --card: 222.2 84% 4.9%;
   --card-foreground: 210 40% 98%;
   --popover: 222.2 84% 4.9%;
   --popover-foreground: 210 40% 98%;
-  --primary: 220 90% 56%;
-  --primary-foreground: 222.2 84% 4.9%;
+  --primary: 262 83% 58%;
+  --primary-foreground: 210 40% 98%;
   --secondary: 217.2 32.6% 17.5%;
   --secondary-foreground: 210 40% 98%;
   --muted: 217.2 32.6% 17.5%;
@@ -51,7 +24,12 @@
   --destructive-foreground: 210 40% 98%;
   --border: 217.2 32.6% 17.5%;
   --input: 217.2 32.6% 17.5%;
-  --ring: 220 90% 56%;
+  --ring: 262 83% 58%;
+  --radius: 0.75rem;
+  
+  /* Safe area variables for mobile */
+  --safe-area-inset-top: env(safe-area-inset-top);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom);
 }
 
 * {
@@ -75,30 +53,34 @@ body {
   padding-bottom: var(--safe-area-inset-bottom);
 }
 
-/* Gradient backgrounds */
+/* Gradient backgrounds futuristes */
 .gradient-bg {
   background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(260, 90%, 65%) 100%);
 }
 
-/* Custom scrollbar */
+.futuristic-glow {
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.3);
+}
+
+/* Custom scrollbar futuriste */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(var(--muted));
+  background: hsl(217.2, 32.6%, 12%);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground));
-  border-radius: 3px;
+  background: hsl(var(--primary));
+  border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--primary));
+  background: hsl(262, 83%, 68%);
 }
 
-/* Animations */
+/* Animations futuristes */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -110,8 +92,21 @@ body {
   }
 }
 
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.6);
+  }
+}
+
 .animate-fade-in {
-  animation: fadeIn 0.3s ease-out;
+  animation: fadeIn 0.6s ease-out;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
 }
 
 /* Mobile-first responsive design */
@@ -121,20 +116,16 @@ body {
   }
 }
 
-/* Focus styles */
+/* Focus styles futuristes */
 :focus-visible {
-  outline: 2px solid hsl(var(--ring));
+  outline: 2px solid hsl(var(--primary));
   outline-offset: 2px;
+  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.1);
 }
 
 /* High contrast mode support */
 @media (prefers-contrast: high) {
   :root {
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-  }
-  
-  .dark {
     --border: 0 0% 80%;
     --input: 0 0% 80%;
   }
@@ -147,4 +138,19 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Glass morphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Neon text effect */
+.neon-text {
+  text-shadow: 
+    0 0 5px hsl(var(--primary)),
+    0 0 10px hsl(var(--primary)),
+    0 0 20px hsl(var(--primary));
 }
