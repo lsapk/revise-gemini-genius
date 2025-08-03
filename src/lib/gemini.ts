@@ -129,11 +129,32 @@ const parseGeminiResponse = (text: string): any => {
       .replace(/^[^{]*({.*})[^}]*$/s, '$1') // Extraire uniquement le JSON
       .trim();
 
+    // Fix common JSON issues
+    cleanText = cleanText
+      .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
+      .replace(/([}\]]),?\s*$/g, '$1') // Clean up ending
+      .replace(/\n\s*\n/g, '\n') // Remove double line breaks
+      .replace(/\r\n/g, '\n'); // Normalize line endings
+
     // Parser le JSON
     return JSON.parse(cleanText);
   } catch (error) {
     console.error('Erreur de parsing JSON:', error);
     console.error('Texte reçu:', text);
+    
+    // Try to extract and fix the JSON more aggressively
+    try {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        let fixedJson = jsonMatch[0]
+          .replace(/,(\s*[}\]])/g, '$1')
+          .replace(/([}\]]),?\s*$/g, '$1');
+        return JSON.parse(fixedJson);
+      }
+    } catch (secondError) {
+      console.error('Tentative de réparation échouée:', secondError);
+    }
+    
     throw new Error('Réponse invalide de l\'IA');
   }
 };
