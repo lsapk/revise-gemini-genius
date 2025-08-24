@@ -25,7 +25,7 @@ export function ResponsiveLayout({
 
   useEffect(() => {
     const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+      setIsMobile(window.innerWidth < 1024); // Changed to 1024px for better desktop experience
     };
 
     checkIsMobile();
@@ -43,11 +43,11 @@ export function ResponsiveLayout({
             <div className="flex items-center gap-3">
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="sm" className="md:hidden">
+                  <Button variant="ghost" size="sm" className="lg:hidden">
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-[280px] sm:w-[350px]">
+                <SheetContent side="left" className="w-[280px] sm:w-[350px] p-0">
                   <AppSidebar />
                 </SheetContent>
               </Sheet>
@@ -84,6 +84,7 @@ export function ResponsiveLayout({
     );
   }
 
+  // Desktop Layout - Always use sidebar layout for desktop
   return (
     <div className="min-h-screen bg-background">
       <SidebarProvider defaultOpen={true}>
@@ -96,7 +97,7 @@ export function ResponsiveLayout({
               <div className="flex items-center justify-between px-6 py-4">
                 <div className="flex items-center gap-4">
                   {title && (
-                    <h1 className="text-xl font-semibold">
+                    <h1 className="text-2xl font-semibold">
                       {title}
                     </h1>
                   )}
@@ -117,7 +118,7 @@ export function ResponsiveLayout({
 
             {/* Desktop Content */}
             <main className={cn(
-              "p-6 min-h-[calc(100vh-80px)]",
+              "p-8 min-h-[calc(100vh-80px)]",
               className
             )}>
               {children}
