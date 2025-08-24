@@ -6,9 +6,10 @@ import { CheckCircle, Clock, Sparkles, Brain, FileText, HelpCircle, CreditCard }
 
 interface ModernProcessingViewProps {
   currentStep: number;
+  stepNames: string[];
 }
 
-const processingSteps = [
+const defaultProcessingSteps = [
   { 
     id: 1, 
     name: 'Analyse du contenu', 
@@ -46,14 +47,21 @@ const processingSteps = [
   },
 ];
 
-export function ModernProcessingView({ currentStep }: ModernProcessingViewProps) {
+export function ModernProcessingView({ currentStep, stepNames }: ModernProcessingViewProps) {
   const [progress, setProgress] = useState(0);
+
+  // Use provided stepNames or fall back to default
+  const processingSteps = stepNames.map((name, index) => ({
+    ...defaultProcessingSteps[index],
+    id: index + 1,
+    name: name
+  }));
 
   useEffect(() => {
     const totalSteps = processingSteps.length;
     const stepProgress = ((currentStep - 1) / totalSteps) * 100;
     setProgress(stepProgress);
-  }, [currentStep]);
+  }, [currentStep, processingSteps.length]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
