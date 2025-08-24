@@ -1,148 +1,126 @@
 
+import { BookOpen, Play, FileText, Brain, MoreVertical, Trash2, Edit } from 'lucide-react';
+import { ProfessionalCard, ProfessionalCardContent, ProfessionalCardHeader, ProfessionalCardTitle, ProfessionalCardDescription } from '@/components/ui/professional-card';
+import { ModernButton } from '@/components/ui/modern-button';
+import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useApp } from '@/contexts/AppContext';
 import { Link } from 'react-router-dom';
-import { Clock, Trophy, Target, BookOpen, MoreVertical, Trash2, Edit } from 'lucide-react';
-import { ModernCard, ModernCardContent } from '@/components/ui/modern-card';
-import { Button } from '@/components/ui/button';
-import { Subject } from '@/lib/storage';
-import { cn } from '@/lib/utils';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
+interface Subject {
+  id: string;
+  name: string;
+  description?: string;
+  color: string;
+  lessons_count: number;
+  created_at: string;
+}
 
 interface ModernSubjectCardProps {
   subject: Subject;
-  stats?: {
-    studyTime: number;
-    averageScore: number;
-    sessionsCount: number;
-  };
-  onDelete?: (id: string) => void;
-  onEdit?: (subject: Subject) => void;
 }
 
-export function ModernSubjectCard({ subject, stats, onDelete, onEdit }: ModernSubjectCardProps) {
-  const handleDelete = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (onDelete && confirm('Êtes-vous sûr de vouloir supprimer cette matière et tous ses contenus ?')) {
-      onDelete(subject.id);
-    }
-  };
+export function ModernSubjectCard({ subject }: ModernSubjectCardProps) {
+  const { deleteSubject } = useApp();
 
-  const handleEdit = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (onEdit) {
-      onEdit(subject);
+  const handleDelete = async () => {
+    if (confirm(`Êtes-vous sûr de vouloir supprimer la matière "${subject.name}" ?`)) {
+      await deleteSubject(subject.id);
     }
   };
 
   return (
-    <ModernCard className="group hover:shadow-lg hover:scale-[1.02] transition-all duration-300 relative overflow-hidden">
-      {/* Menu dropdown en haut à droite */}
-      <div className="absolute top-3 right-3 z-10">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-8 h-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 hover:bg-white shadow-sm"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <MoreVertical className="w-4 h-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={handleEdit} className="cursor-pointer">
-              <Edit className="w-4 h-4 mr-2" />
-              Modifier
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={handleDelete} 
-              className="cursor-pointer text-red-600 focus:text-red-600"
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Supprimer
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      <Link to={`/subject/${subject.id}`} className="block">
-        <ModernCardContent className="p-4 sm:p-6">
-          {/* Header avec couleur de la matière */}
-          <div className="flex items-start gap-3 mb-4">
+    <ProfessionalCard className="group hover:scale-105 transition-all duration-300">
+      <ProfessionalCardHeader className="relative">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-4">
             <div 
-              className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0"
-              style={{ backgroundColor: subject.color }}
+              className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg"
+              style={{ backgroundColor: subject.color + '20', border: `2px solid ${subject.color}40` }}
             >
-              <BookOpen className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+              <BookOpen className="w-8 h-8" style={{ color: subject.color }} />
             </div>
-            
-            <div className="flex-1 min-w-0 pr-8">
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white truncate mb-1">
-                {subject.name}
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {subject.chapters.length} chapitre{subject.chapters.length > 1 ? 's' : ''}
-              </p>
+            <div className="space-y-2">
+              <ProfessionalCardTitle className="text-xl">{subject.name}</ProfessionalCardTitle>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="text-xs">
+                  {subject.lessons_count} cours
+                </Badge>
+              </div>
             </div>
           </div>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <ModernButton variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                <MoreVertical className="w-4 h-4" />
+              </ModernButton>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                <Edit className="w-4 h-4 mr-2" />
+                Modifier
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive">
+                <Trash2 className="w-4 h-4 mr-2" />
+                Supprimer
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        
+        {subject.description && (
+          <ProfessionalCardDescription className="mt-3">
+            {subject.description}
+          </ProfessionalCardDescription>
+        )}
+      </ProfessionalCardHeader>
 
-          {/* Statistiques - Layout mobile optimisé */}
-          {stats && (
-            <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-4">
-              <div className="text-center p-2 sm:p-3 bg-blue-50 dark:bg-blue-950/30 rounded-xl">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" />
-                </div>
-                <p className="text-xs sm:text-sm font-semibold text-blue-600">{stats.studyTime}min</p>
-                <p className="text-xs text-gray-600 dark:text-gray-400">Temps</p>
-              </div>
-              
-              <div className="text-center p-2 sm:p-3 bg-green-50 dark:bg-green-950/30 rounded-xl">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <Trophy className="w-3 h-3 sm:w-4 sm:h-4 text-green-600" />
-                </div>
-                <p className="text-xs sm:text-sm font-semibold text-green-600">{Math.round(stats.averageScore)}%</p>
-                <p className="text-xs text-gray-600 dark:text-gray-400">Score</p>
-              </div>
-              
-              <div className="text-center p-2 sm:p-3 bg-purple-50 dark:bg-purple-950/30 rounded-xl">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <Target className="w-3 h-3 sm:w-4 sm:h-4 text-purple-600" />
-                </div>
-                <p className="text-xs sm:text-sm font-semibold text-purple-600">{stats.sessionsCount}</p>
-                <p className="text-xs text-gray-600 dark:text-gray-400">Sessions</p>
-              </div>
-            </div>
-          )}
-
-          {/* Progression des chapitres */}
-          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
-                Progression
-              </span>
-              <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                {subject.chapters.length} chapitres
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-              <div 
-                className="h-2 rounded-full transition-all duration-300"
-                style={{ 
-                  backgroundColor: subject.color,
-                  width: subject.chapters.length > 0 ? '65%' : '0%'
-                }}
-              />
-            </div>
+      <ProfessionalCardContent className="space-y-4">
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="bg-muted/50 rounded-xl p-3">
+            <FileText className="w-5 h-5 mx-auto mb-1 text-blue-600" />
+            <p className="text-xs font-medium text-muted-foreground">Résumés</p>
+            <p className="text-sm font-bold">3</p>
           </div>
-        </ModernCardContent>
-      </Link>
-    </ModernCard>
+          <div className="bg-muted/50 rounded-xl p-3">
+            <Brain className="w-5 h-5 mx-auto mb-1 text-green-600" />
+            <p className="text-xs font-medium text-muted-foreground">QCM</p>
+            <p className="text-sm font-bold">5</p>
+          </div>
+          <div className="bg-muted/50 rounded-xl p-3">
+            <Play className="w-5 h-5 mx-auto mb-1 text-purple-600" />
+            <p className="text-xs font-medium text-muted-foreground">Flash</p>
+            <p className="text-sm font-bold">12</p>
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <ModernButton 
+            asChild 
+            variant="default" 
+            size="sm" 
+            className="flex-1"
+            icon={<Play />}
+          >
+            <Link to={`/subject/${subject.id}`}>
+              Réviser
+            </Link>
+          </ModernButton>
+          
+          <ModernButton 
+            asChild 
+            variant="outline" 
+            size="sm"
+            icon={<FileText />}
+          >
+            <Link to={`/subject/${subject.id}/lessons`}>
+              Cours
+            </Link>
+          </ModernButton>
+        </div>
+      </ProfessionalCardContent>
+    </ProfessionalCard>
   );
 }

@@ -1,93 +1,139 @@
 
-import { Plus, Calendar, Brain, BarChart3 } from 'lucide-react';
+import { Plus, Brain, BarChart3, Calendar, FileText, Camera, Upload, Link as LinkIcon } from 'lucide-react';
+import { ProfessionalCard, ProfessionalCardContent, ProfessionalCardHeader, ProfessionalCardTitle } from '@/components/ui/professional-card';
+import { ModernButton } from '@/components/ui/modern-button';
 import { Link } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 const quickActions = [
   {
-    title: 'Nouveau cours',
-    description: 'Ajoutez du contenu',
     icon: Plus,
+    title: 'Nouveau cours',
+    description: 'Ajouter du contenu à réviser',
     href: '/add',
-    className: 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/30 border-blue-200 dark:border-blue-800 hover:shadow-blue-200/50 dark:hover:shadow-blue-900/50',
-    iconClassName: 'text-blue-600'
+    gradient: 'from-blue-500 to-cyan-500',
+    bgGradient: 'from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20'
   },
   {
-    title: 'Planning',
-    description: 'Organisez vos révisions',
-    icon: Calendar,
-    href: '/planning',
-    className: 'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/30 border-green-200 dark:border-green-800 hover:shadow-green-200/50 dark:hover:shadow-green-900/50',
-    iconClassName: 'text-green-600'
-  },
-  {
-    title: 'Assistant IA',
-    description: 'Posez vos questions',
     icon: Brain,
+    title: 'Assistant IA',
+    description: 'Poser vos questions',
     href: '/assistant',
-    className: 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/30 border-purple-200 dark:border-purple-800 hover:shadow-purple-200/50 dark:hover:shadow-purple-900/50',
-    iconClassName: 'text-purple-600'
+    gradient: 'from-purple-500 to-violet-500',
+    bgGradient: 'from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20'
   },
   {
-    title: 'Mes Statistiques',
-    description: 'Suivez vos progrès',
     icon: BarChart3,
+    title: 'Statistiques',
+    description: 'Voir vos progrès',
     href: '/stats',
-    className: 'bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/30 dark:to-orange-900/30 border-orange-200 dark:border-orange-800 hover:shadow-orange-200/50 dark:hover:shadow-orange-900/50',
-    iconClassName: 'text-orange-600'
+    gradient: 'from-green-500 to-emerald-500',
+    bgGradient: 'from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20'
+  },
+  {
+    icon: Calendar,
+    title: 'Planning',
+    description: 'Organiser vos révisions',
+    href: '/planning',
+    gradient: 'from-orange-500 to-red-500',
+    bgGradient: 'from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/20'
+  }
+];
+
+const addContentTypes = [
+  {
+    icon: FileText,
+    title: 'Texte',
+    description: 'Coller du texte directement',
+    href: '/add?type=text',
+    color: 'text-blue-600'
+  },
+  {
+    icon: Upload,
+    title: 'PDF',
+    description: 'Importer un document',
+    href: '/add?type=pdf',
+    color: 'text-red-600'
+  },
+  {
+    icon: Camera,
+    title: 'Image',
+    description: 'Scanner une photo',
+    href: '/add?type=image',
+    color: 'text-green-600'
+  },
+  {
+    icon: LinkIcon,
+    title: 'URL',
+    description: 'Depuis un lien web',
+    href: '/add?type=url',
+    color: 'text-purple-600'
   }
 ];
 
 export function ModernQuickActions() {
   return (
-    <div className="space-y-6">
-      <div className="text-center lg:text-left">
-        <h2 className="text-2xl lg:text-3xl font-semibold mb-3">Actions rapides</h2>
-        <p className="text-muted-foreground text-lg">
-          Accédez rapidement à vos outils favoris
-        </p>
-      </div>
-      
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {quickActions.map((action) => (
-          <Card 
-            key={action.title}
-            className={cn(
-              "group transition-all duration-300 hover:shadow-xl hover:-translate-y-2 cursor-pointer border-2 overflow-hidden",
-              action.className
-            )}
-          >
-            <CardContent className="p-8">
-              <Button 
-                asChild 
-                variant="ghost" 
-                className="w-full h-auto p-0 hover:bg-transparent"
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* Actions principales */}
+      <ProfessionalCard>
+        <ProfessionalCardHeader>
+          <ProfessionalCardTitle>Actions rapides</ProfessionalCardTitle>
+        </ProfessionalCardHeader>
+        <ProfessionalCardContent>
+          <div className="grid grid-cols-2 gap-4">
+            {quickActions.map((action) => (
+              <ModernButton
+                key={action.title}
+                asChild
+                variant="ghost"
+                className={`h-auto p-6 bg-gradient-to-br ${action.bgGradient} hover:scale-105 border border-border/30 hover:border-primary/30`}
               >
-                <Link to={action.href} className="block text-left">
-                  <div className="flex flex-col items-center text-center space-y-4">
-                    <div className={cn(
-                      "w-16 h-16 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 group-hover:rotate-3",
-                      "bg-white dark:bg-gray-800/50 shadow-lg"
-                    )}>
-                      <action.icon className={cn("w-8 h-8", action.iconClassName)} />
+                <Link to={action.href}>
+                  <div className="text-center space-y-3">
+                    <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${action.gradient} flex items-center justify-center mx-auto shadow-lg`}>
+                      <action.icon className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100 mb-2">
-                        {action.title}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {action.description}
-                      </p>
+                      <p className="font-semibold text-sm">{action.title}</p>
+                      <p className="text-xs text-muted-foreground">{action.description}</p>
                     </div>
                   </div>
                 </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </ModernButton>
+            ))}
+          </div>
+        </ProfessionalCardContent>
+      </ProfessionalCard>
+
+      {/* Ajouter du contenu */}
+      <ProfessionalCard>
+        <ProfessionalCardHeader>
+          <ProfessionalCardTitle>Ajouter du contenu</ProfessionalCardTitle>
+        </ProfessionalCardHeader>
+        <ProfessionalCardContent>
+          <div className="space-y-3">
+            {addContentTypes.map((type) => (
+              <ModernButton
+                key={type.title}
+                asChild
+                variant="outline"
+                className="w-full justify-start h-auto p-4 hover:bg-muted/50"
+              >
+                <Link to={type.href}>
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                      <type.icon className={`w-5 h-5 ${type.color}`} />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-semibold text-sm">{type.title}</p>
+                      <p className="text-xs text-muted-foreground">{type.description}</p>
+                    </div>
+                  </div>
+                </Link>
+              </ModernButton>
+            ))}
+          </div>
+        </ProfessionalCardContent>
+      </ProfessionalCard>
     </div>
   );
 }
