@@ -2,6 +2,7 @@
 import { ReactNode, useState, useEffect } from 'react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
+import { MobileSidebar } from './MobileSidebar';
 import { BottomNavigation } from './BottomNavigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -25,7 +26,7 @@ export function ResponsiveLayout({
 
   useEffect(() => {
     const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < 1024); // Changed to 1024px for better desktop experience
+      setIsMobile(window.innerWidth < 1024);
     };
 
     checkIsMobile();
@@ -48,7 +49,7 @@ export function ResponsiveLayout({
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-[280px] sm:w-[350px] p-0">
-                  <AppSidebar />
+                  <MobileSidebar />
                 </SheetContent>
               </Sheet>
               
@@ -94,7 +95,7 @@ export function ResponsiveLayout({
           <SidebarInset className="flex-1">
             {/* Desktop Header */}
             <header className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-              <div className="flex items-center justify-between px-6 py-4">
+              <div className="flex items-center justify-between px-8 py-4">
                 <div className="flex items-center gap-4">
                   {title && (
                     <h1 className="text-2xl font-semibold">
