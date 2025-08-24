@@ -23,7 +23,6 @@ import {
   SidebarMenuItem,
   SidebarHeader,
   SidebarFooter,
-  useSidebar,
 } from '@/components/ui/sidebar';
 import { useApp } from '@/contexts/AppContext';
 
@@ -37,10 +36,8 @@ const mainItems = [
 ];
 
 export function AppSidebar() {
-  const { state } = useSidebar();
   const location = useLocation();
   const { subjects } = useApp();
-  const isCollapsed = state === 'collapsed';
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -54,27 +51,25 @@ export function AppSidebar() {
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
             <Sparkles className="w-5 h-5 text-primary-foreground" />
           </div>
-          {!isCollapsed && (
-            <div>
-              <h2 className="text-lg font-bold text-sidebar-primary">
-                ReviseGenius
-              </h2>
-              <p className="text-xs text-sidebar-foreground/60">IA Révision</p>
-            </div>
-          )}
+          <div className="group-data-[collapsible=icon]:hidden">
+            <h2 className="text-lg font-bold text-sidebar-primary">
+              ReviseGenius
+            </h2>
+            <p className="text-xs text-sidebar-foreground/60">IA Révision</p>
+          </div>
         </div>
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/60 text-xs uppercase tracking-wider">
-            {!isCollapsed ? 'Navigation' : ''}
+          <SidebarGroupLabel className="text-sidebar-foreground/60 text-xs uppercase tracking-wider group-data-[collapsible=icon]:hidden">
+            Navigation
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild tooltip={isCollapsed ? item.title : undefined}>
+                  <SidebarMenuButton asChild tooltip={item.title}>
                     <NavLink 
                       to={item.url} 
                       className={({ isActive }) => cn(
@@ -85,7 +80,7 @@ export function AppSidebar() {
                       )}
                     >
                       <item.icon className="w-5 h-5 flex-shrink-0" />
-                      {!isCollapsed && <span className="font-medium">{item.title}</span>}
+                      <span className="font-medium group-data-[collapsible=icon]:hidden">{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -94,8 +89,8 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {!isCollapsed && subjects.length > 0 && (
-          <SidebarGroup>
+        {subjects.length > 0 && (
+          <SidebarGroup className="group-data-[collapsible=icon]:hidden">
             <SidebarGroupLabel className="text-sidebar-foreground/60 text-xs uppercase tracking-wider">
               Matières ({subjects.length})
             </SidebarGroupLabel>
@@ -134,12 +129,10 @@ export function AppSidebar() {
         )}
       </SidebarContent>
 
-      <SidebarFooter className="border-t p-4">
-        {!isCollapsed && (
-          <div className="text-xs text-sidebar-foreground/60 text-center">
-            Version 2.1 • Interface améliorée
-          </div>
-        )}
+      <SidebarFooter className="border-t p-4 group-data-[collapsible=icon]:hidden">
+        <div className="text-xs text-sidebar-foreground/60 text-center">
+          Version 2.1 • Interface améliorée
+        </div>
       </SidebarFooter>
     </Sidebar>
   );
