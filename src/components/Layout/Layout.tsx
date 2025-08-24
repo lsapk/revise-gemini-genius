@@ -1,6 +1,6 @@
 
 import { ReactNode } from 'react';
-import { FuturisticLayout } from './FuturisticLayout';
+import { ResponsiveLayout } from './ResponsiveLayout';
 
 interface LayoutProps {
   children: ReactNode;
@@ -12,12 +12,12 @@ interface LayoutProps {
 
 export function Layout({ children, title, headerActions, className }: LayoutProps) {
   return (
-    <FuturisticLayout 
+    <ResponsiveLayout 
       title={title}
       headerActions={headerActions}
       className={className}
     >
       {children}
-    </FuturisticLayout>
+    </ResponsiveLayout>
   );
 }

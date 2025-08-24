@@ -1,5 +1,4 @@
 
-import { useState } from 'react';
 import { 
   Home, 
   Plus, 
@@ -8,8 +7,8 @@ import {
   Brain,
   BookOpen,
   Sparkles,
-  ChevronLeft,
-  ChevronRight
+  Calendar,
+  Users
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -24,15 +23,14 @@ import {
   SidebarMenuItem,
   SidebarHeader,
   SidebarFooter,
-  SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
 import { useApp } from '@/contexts/AppContext';
 
 const mainItems = [
   { title: 'Accueil', url: '/', icon: Home },
   { title: 'Ajouter', url: '/add', icon: Plus },
+  { title: 'Planning', url: '/planning', icon: Calendar },
   { title: 'Assistant IA', url: '/assistant', icon: Brain },
   { title: 'Statistiques', url: '/stats', icon: BarChart3 },
   { title: 'Paramètres', url: '/settings', icon: Settings },
@@ -48,20 +46,20 @@ export function AppSidebar() {
 
   return (
     <Sidebar 
-      className="bg-gray-950 border-gray-800 text-gray-100"
+      className="border-r bg-sidebar text-sidebar-foreground"
       collapsible="icon"
     >
-      <SidebarHeader className="border-b border-gray-800">
+      <SidebarHeader className="border-b">
         <div className="flex items-center gap-3 p-4">
-          <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
-            <Sparkles className="w-5 h-5 text-white" />
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+            <Sparkles className="w-5 h-5 text-primary-foreground" />
           </div>
           {!isCollapsed && (
             <div>
-              <h2 className="text-lg font-bold bg-gradient-to-r from-primary-400 to-primary-300 bg-clip-text text-transparent">
+              <h2 className="text-lg font-bold text-sidebar-primary">
                 ReviseGenius
               </h2>
-              <p className="text-xs text-gray-400">IA Révision</p>
+              <p className="text-xs text-sidebar-foreground/60">IA Révision</p>
             </div>
           )}
         </div>
@@ -69,7 +67,7 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-gray-400 text-xs uppercase tracking-wider">
+          <SidebarGroupLabel className="text-sidebar-foreground/60 text-xs uppercase tracking-wider">
             {!isCollapsed ? 'Navigation' : ''}
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -79,11 +77,11 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild tooltip={isCollapsed ? item.title : undefined}>
                     <NavLink 
                       to={item.url} 
-                      className={cn(
+                      className={({ isActive }) => cn(
                         "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200",
-                        isActive(item.url)
-                          ? "bg-primary-600 text-white shadow-lg shadow-primary-600/30"
-                          : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                        isActive
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent/50"
                       )}
                     >
                       <item.icon className="w-5 h-5 flex-shrink-0" />
@@ -98,17 +96,22 @@ export function AppSidebar() {
 
         {!isCollapsed && subjects.length > 0 && (
           <SidebarGroup>
-            <SidebarGroupLabel className="text-gray-400 text-xs uppercase tracking-wider">
+            <SidebarGroupLabel className="text-sidebar-foreground/60 text-xs uppercase tracking-wider">
               Matières ({subjects.length})
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {subjects.slice(0, 5).map((subject) => (
+                {subjects.slice(0, 8).map((subject) => (
                   <SidebarMenuItem key={subject.id}>
                     <SidebarMenuButton asChild>
                       <NavLink 
                         to={`/subject/${subject.id}`}
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-all duration-200"
+                        className={({ isActive }) => cn(
+                          "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200",
+                          isActive
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                            : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+                        )}
                       >
                         <BookOpen className="w-4 h-4 flex-shrink-0" />
                         <span className="truncate text-sm">{subject.name}</span>
@@ -116,16 +119,25 @@ export function AppSidebar() {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
+                {subjects.length > 8 && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <NavLink to="/subjects" className="text-sidebar-foreground/60 text-xs px-3 py-1">
+                        +{subjects.length - 8} autres matières
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         )}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-gray-800 p-4">
+      <SidebarFooter className="border-t p-4">
         {!isCollapsed && (
-          <div className="text-xs text-gray-500 text-center">
-            Version 2.0 • Futuriste
+          <div className="text-xs text-sidebar-foreground/60 text-center">
+            Version 2.1 • Interface améliorée
           </div>
         )}
       </SidebarFooter>
