@@ -1,13 +1,14 @@
+
 import { useEffect } from 'react';
 import { Layout } from '@/components/Layout/Layout';
-import { ModernWelcomeSection } from '@/components/Sections/ModernWelcomeSection';
-import { ModernStatsGrid } from '@/components/Sections/ModernStatsGrid';
-import { ModernQuickActions } from '@/components/Sections/ModernQuickActions';
+import { ModernWelcomeSection } from '@/components/Home/ModernWelcomeSection';
+import { ModernStatsGrid } from '@/components/Home/ModernStatsGrid';
+import { ModernQuickActions } from '@/components/Home/ModernQuickActions';
 import { ProfessionalCard, ProfessionalCardContent } from '@/components/ui/professional-card';
 import { ModernButton } from '@/components/ui/modern-button';
 import { BookOpen, Plus } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
-import { ModernSubjectCard } from '@/components/Cards/ModernSubjectCard';
+import { ModernSubjectCard } from '@/components/Home/ModernSubjectCard';
 import { CreateSubjectModal } from '@/components/Subjects/CreateSubjectModal';
 
 export default function Index() {
