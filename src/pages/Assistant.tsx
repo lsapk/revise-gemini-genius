@@ -1,9 +1,9 @@
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Loader2, Brain, Sparkles, Zap, BookOpen } from 'lucide-react';
+import { Send, Loader2, Brain, Sparkles, Zap, BookOpen, Maximize2, Minimize2 } from 'lucide-react';
 import { Layout } from '@/components/Layout/Layout';
-import { FuturisticCard, FuturisticCardContent } from '@/components/ui/futuristic-card';
-import { Button } from '@/components/ui/button';
+import { ProfessionalCard, ProfessionalCardContent } from '@/components/ui/professional-card';
+import { ModernButton } from '@/components/ui/modern-button';
 import { Input } from '@/components/ui/input';
 import { useApp } from '@/contexts/AppContext';
 import { callGemini } from '@/lib/gemini';
@@ -52,6 +52,7 @@ export default function Assistant() {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { subjects, stats, geminiApiKey } = useApp();
 
@@ -67,15 +68,15 @@ export default function Assistant() {
     const context = {
       subjects: subjects.map(s => ({
         name: s.name,
-        chaptersCount: s.chapters.length,
-        chapters: s.chapters.map(c => ({
+        chaptersCount: s.chapters?.length || 0,
+        chapters: s.chapters?.map(c => ({
           name: c.name,
-          lessonsCount: c.lessons.length,
-          lessons: c.lessons.map(l => ({
+          lessonsCount: c.lessons?.length || 0,
+          lessons: c.lessons?.map(l => ({
             name: l.name,
-            contentPreview: l.content.substring(0, 200)
-          }))
-        }))
+            contentPreview: l.content?.substring(0, 200) || ''
+          })) || []
+        })) || []
       })),
       stats: {
         totalStudyTime: stats.totalStudyTime,
@@ -173,15 +174,14 @@ Désolé, je n'ai pas pu traiter votre demande pour les raisons suivantes :
   };
 
   const renderMarkdown = (content: string) => {
-    // Conversion Markdown améliorée avec emojis préservés
     return content
-      .replace(/^# (.*$)/gm, '<h1 class="text-3xl font-bold mb-6 bg-gradient-to-r from-primary-400 to-primary-300 bg-clip-text text-transparent">$1</h1>')
-      .replace(/^## (.*$)/gm, '<h2 class="text-2xl font-semibold mb-4 text-gray-100 border-b border-gray-800 pb-2">$1</h2>')
-      .replace(/^### (.*$)/gm, '<h3 class="text-xl font-medium mb-3 text-primary-300">$1</h3>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-primary-200">$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em class="italic text-gray-300">$1</em>')
-      .replace(/^- (.*$)/gm, '<div class="flex items-start gap-3 mb-2"><span class="text-primary-400 mt-1">•</span><span class="text-gray-300">$1</span></div>')
-      .replace(/^---$/gm, '<hr class="border-gray-800 my-6">')
+      .replace(/^# (.*$)/gm, '<h1 class="text-3xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">$1</h1>')
+      .replace(/^## (.*$)/gm, '<h2 class="text-2xl font-semibold mb-4 text-foreground border-b border-border pb-2">$1</h2>')
+      .replace(/^### (.*$)/gm, '<h3 class="text-xl font-medium mb-3 text-primary">$1</h3>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-primary">$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em class="italic text-muted-foreground">$1</em>')
+      .replace(/^- (.*$)/gm, '<div class="flex items-start gap-3 mb-2"><span class="text-primary mt-1">•</span><span class="text-foreground">$1</span></div>')
+      .replace(/^---$/gm, '<hr class="border-border my-6">')
       .replace(/\n\n/g, '<div class="mb-4"></div>')
       .replace(/\n/g, '<br/>');
   };
@@ -191,65 +191,87 @@ Désolé, je n'ai pas pu traiter votre demande pour les raisons suivantes :
       title="🧠 Assistant IA" 
       headerActions={
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-sm text-gray-400">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <BookOpen className="w-4 h-4" />
             <span className="hidden sm:inline">{subjects.length} matières</span>
           </div>
+          <ModernButton
+            variant="outline"
+            size="sm"
+            onClick={() => setIsExpanded(!isExpanded)}
+            icon={isExpanded ? <Minimize2 /> : <Maximize2 />}
+          >
+            <span className="hidden sm:inline">
+              {isExpanded ? 'Réduire' : 'Agrandir'}
+            </span>
+          </ModernButton>
           <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
         </div>
       }
+      className={cn(
+        "transition-all duration-300",
+        isExpanded ? "fixed inset-0 z-50 bg-background" : ""
+      )}
     >
-      <div className="max-w-5xl mx-auto h-full flex flex-col">
+      <div className={cn(
+        "mx-auto h-full flex flex-col",
+        isExpanded ? "max-w-full p-4" : "max-w-6xl"
+      )}>
         {/* Header avec statistiques */}
-        <FuturisticCard className="mb-6">
-          <FuturisticCardContent className="p-6">
+        <ProfessionalCard className="mb-6">
+          <ProfessionalCardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center shadow-lg shadow-primary-500/30">
+              <div className="w-14 h-14 bg-gradient-to-br from-primary to-primary/70 rounded-2xl flex items-center justify-center shadow-lg">
                 <Brain className="w-7 h-7 text-white" />
               </div>
               <div className="flex-1">
-                <h2 className="text-xl font-semibold text-white mb-1">Assistant IA Personnel</h2>
-                <p className="text-gray-400">
+                <h2 className="text-xl font-semibold text-card-foreground mb-1">Assistant IA Personnel</h2>
+                <p className="text-muted-foreground text-sm md:text-base">
                   🎯 {subjects.length} matières • ⚡ {stats.sessionsCompleted} sessions • 📊 {stats.averageScore}% moyenne
                 </p>
               </div>
-              <div className="flex items-center gap-2 text-primary-400">
+              <div className="flex items-center gap-2 text-primary">
                 <Sparkles className="w-5 h-5 animate-pulse" />
-                <span className="text-sm font-medium">IA Active</span>
+                <span className="text-sm font-medium hidden sm:inline">IA Active</span>
               </div>
             </div>
-          </FuturisticCardContent>
-        </FuturisticCard>
+          </ProfessionalCardContent>
+        </ProfessionalCard>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto space-y-6 mb-6 max-h-[calc(100vh-300px)]">
+        {/* Messages container avec hauteur adaptative */}
+        <div className={cn(
+          "flex-1 overflow-y-auto space-y-4 mb-6 px-2",
+          isExpanded 
+            ? "max-h-[calc(100vh-200px)]" 
+            : "max-h-[calc(100vh-350px)] md:max-h-[calc(100vh-300px)]"
+        )}>
           {messages.map((message) => (
             <div
               key={message.id}
               className={cn(
-                "flex",
+                "flex animate-fade-in",
                 message.role === 'user' ? "justify-end" : "justify-start"
               )}
             >
               <div
                 className={cn(
-                  "max-w-4xl rounded-2xl p-6 relative",
+                  "rounded-2xl p-4 md:p-6 relative max-w-[85%] md:max-w-4xl",
                   message.role === 'user'
-                    ? "bg-gradient-to-br from-primary-600 to-primary-700 text-white shadow-lg shadow-primary-600/30"
-                    : "bg-gradient-to-br from-gray-900/90 to-gray-950/90 border border-gray-800/50 backdrop-blur-sm"
+                    ? "bg-gradient-to-br from-primary to-primary/80 text-white shadow-lg"
+                    : "bg-card border border-border text-card-foreground shadow-md"
                 )}
               >
                 {message.role === 'assistant' ? (
                   <div 
-                    className="prose prose-lg max-w-none prose-invert"
+                    className="prose prose-sm md:prose-lg max-w-none text-card-foreground"
                     dangerouslySetInnerHTML={{ __html: renderMarkdown(message.content) }}
                   />
                 ) : (
-                  <p className="text-white font-medium">{message.content}</p>
+                  <p className="text-white font-medium text-sm md:text-base">{message.content}</p>
                 )}
                 <div className={cn(
-                  "text-xs mt-4 opacity-70 flex items-center gap-2",
-                  message.role === 'user' ? "text-primary-100 justify-end" : "text-gray-500"
+                  "text-xs mt-3 opacity-70 flex items-center gap-2",
+                  message.role === 'user' ? "text-primary-100 justify-end" : "text-muted-foreground"
                 )}>
                   {message.role === 'assistant' && <Zap className="w-3 h-3" />}
                   {message.timestamp.toLocaleTimeString()}
@@ -259,11 +281,11 @@ Désolé, je n'ai pas pu traiter votre demande pour les raisons suivantes :
           ))}
           
           {isLoading && (
-            <div className="flex justify-start">
-              <div className="bg-gradient-to-br from-gray-900/90 to-gray-950/90 border border-gray-800/50 backdrop-blur-sm rounded-2xl p-6">
+            <div className="flex justify-start animate-fade-in">
+              <div className="bg-card border border-border rounded-2xl p-4 md:p-6 text-card-foreground">
                 <div className="flex items-center gap-3">
-                  <Loader2 className="w-5 h-5 animate-spin text-primary-400" />
-                  <span className="text-gray-300">🧠 L'IA analyse vos données...</span>
+                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                  <span className="text-sm md:text-base">🧠 L'IA analyse vos données...</span>
                 </div>
               </div>
             </div>
@@ -271,32 +293,31 @@ Désolé, je n'ai pas pu traiter votre demande pour les raisons suivantes :
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input moderne */}
-        <FuturisticCard>
-          <FuturisticCardContent className="p-4">
-            <div className="flex gap-3">
+        {/* Input optimisé responsive */}
+        <ProfessionalCard className="sticky bottom-0 bg-card/95 backdrop-blur-sm">
+          <ProfessionalCardContent className="p-3 md:p-4">
+            <div className="flex gap-2 md:gap-3">
               <Input
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 placeholder="💬 Posez votre question à l'assistant IA..."
-                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
                 disabled={isLoading}
-                className="flex-1 bg-gray-800/50 border-gray-700 text-white placeholder-gray-400 focus:border-primary-500 focus:ring-primary-500/20"
+                className="flex-1 bg-background border-border text-foreground placeholder-muted-foreground focus:border-primary focus:ring-primary/20 text-sm md:text-base"
               />
-              <Button
+              <ModernButton
                 onClick={handleSendMessage}
                 disabled={!inputValue.trim() || isLoading}
-                className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-6 shadow-lg shadow-primary-600/30"
+                variant="gradient"
+                loading={isLoading}
+                icon={<Send />}
+                className="px-3 md:px-6"
               >
-                {isLoading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Send className="w-5 h-5" />
-                )}
-              </Button>
+                <span className="hidden sm:inline">Envoyer</span>
+              </ModernButton>
             </div>
-          </FuturisticCardContent>
-        </FuturisticCard>
+          </ProfessionalCardContent>
+        </ProfessionalCard>
       </div>
     </Layout>
   );

@@ -17,13 +17,24 @@ interface AppContextType {
   addStudySession: (session: any) => void;
   refreshStats: () => void;
   addSubject: (name: string, description?: string, color?: string) => Promise<any>;
+  addChapter: (subjectId: string, name: string) => Promise<any>;
+  addLesson: (chapterId: string, name: string, content: string) => Promise<any>;
   deleteSubject: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const { settings, subjects, saveSettings, addSubject: addSubjectToDb, deleteSubject: deleteSubjectFromDb, refreshSubjects } = useSupabaseStorage();
+  const { 
+    settings, 
+    subjects, 
+    saveSettings, 
+    addSubject: addSubjectToDb, 
+    addChapter: addChapterToDb,
+    addLesson: addLessonToDb,
+    deleteSubject: deleteSubjectFromDb, 
+    refreshSubjects 
+  } = useSupabaseStorage();
   
   const [currentLesson, setCurrentLesson] = useState<any | null>(null);
   const [stats] = useState<any>({
@@ -33,15 +44,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     subjectStats: {}
   });
 
-  const isDarkMode = settings.dark_mode || false;
+  const isDarkMode = settings.dark_mode !== false; // Sombre par défaut
   const geminiApiKey = settings.gemini_api_key || '';
 
   useEffect(() => {
-    // Appliquer le mode sombre
+    // Appliquer le mode sombre par défaut
     if (isDarkMode) {
+      document.documentElement.classList.remove('light');
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
     }
   }, [isDarkMode]);
 
@@ -50,9 +63,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await saveSettings({ dark_mode: newDarkMode });
     
     if (newDarkMode) {
+      document.documentElement.classList.remove('light');
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
     }
   };
 
@@ -64,17 +79,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return await addSubjectToDb(name, description, color);
   };
 
+  const addChapter = async (subjectId: string, name: string) => {
+    return await addChapterToDb(subjectId, name);
+  };
+
+  const addLesson = async (chapterId: string, name: string, content: string) => {
+    return await addLessonToDb(chapterId, name, content);
+  };
+
   const deleteSubject = async (id: string) => {
     await deleteSubjectFromDb(id);
   };
 
   const addStudySession = (session: any) => {
-    // TODO: Implémenter avec Supabase
     console.log('Session d\'étude ajoutée:', session);
   };
 
   const refreshStats = () => {
-    // TODO: Implémenter avec Supabase
     console.log('Rafraîchissement des statistiques');
   };
 
@@ -92,6 +113,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       addStudySession,
       refreshStats,
       addSubject,
+      addChapter,
+      addLesson,
       deleteSubject
     }}>
       {children}
