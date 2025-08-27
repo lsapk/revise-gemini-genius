@@ -12,11 +12,19 @@ import { ModernSubjectCard } from '@/components/Home/ModernSubjectCard';
 import { CreateSubjectModal } from '@/components/Subjects/CreateSubjectModal';
 
 export default function Index() {
-  const { subjects, refreshSubjects } = useApp();
+  const { subjects, stats, refreshSubjects } = useApp();
 
   useEffect(() => {
     refreshSubjects();
   }, [refreshSubjects]);
+
+  // Provide default stats if undefined
+  const safeStats = stats || {
+    totalStudyTime: 0,
+    sessionsCompleted: 0,
+    averageScore: 0,
+    subjectStats: {}
+  };
 
   return (
     <Layout title="Tableau de bord">
@@ -25,7 +33,7 @@ export default function Index() {
         <ModernWelcomeSection />
 
         {/* Statistiques modernes */}
-        <ModernStatsGrid />
+        <ModernStatsGrid stats={safeStats} />
 
         {/* Actions rapides améliorées */}
         <ProfessionalCard>
