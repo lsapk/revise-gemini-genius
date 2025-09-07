@@ -14,6 +14,14 @@ const quickActions = [
     bgGradient: 'from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20'
   },
   {
+    icon: FileText,
+    title: 'Mes cours',
+    description: 'Voir tous mes cours',
+    href: '/courses',
+    gradient: 'from-indigo-500 to-purple-500',
+    bgGradient: 'from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20'
+  },
+  {
     icon: Brain,
     title: 'Assistant IA',
     description: 'Poser vos questions',
@@ -28,14 +36,6 @@ const quickActions = [
     href: '/stats',
     gradient: 'from-green-500 to-emerald-500',
     bgGradient: 'from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20'
-  },
-  {
-    icon: Calendar,
-    title: 'Planning',
-    description: 'Organiser vos révisions',
-    href: '/planning',
-    gradient: 'from-orange-500 to-red-500',
-    bgGradient: 'from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/20'
   }
 ];
 
@@ -79,22 +79,22 @@ export function ModernQuickActions() {
           <ProfessionalCardTitle>Actions rapides</ProfessionalCardTitle>
         </ProfessionalCardHeader>
         <ProfessionalCardContent>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-2 gap-4">
             {quickActions.map((action) => (
               <ModernButton
                 key={action.title}
                 asChild
                 variant="ghost"
-                className={`h-auto p-6 bg-gradient-to-br ${action.bgGradient} hover:scale-105 border border-border/30 hover:border-primary/30`}
+                className={`h-auto p-4 bg-gradient-to-br ${action.bgGradient} hover:scale-105 border border-border/30 hover:border-primary/30`}
               >
                 <Link to={action.href}>
-                  <div className="text-center space-y-3">
-                    <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${action.gradient} flex items-center justify-center mx-auto shadow-lg`}>
-                      <action.icon className="w-6 h-6 text-white" />
+                  <div className="text-center space-y-2">
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${action.gradient} flex items-center justify-center mx-auto shadow-lg`}>
+                      <action.icon className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <p className="font-semibold text-sm">{action.title}</p>
-                      <p className="text-xs text-muted-foreground">{action.description}</p>
+                      <p className="font-semibold text-xs">{action.title}</p>
+                      <p className="text-xs text-muted-foreground leading-tight">{action.description}</p>
                     </div>
                   </div>
                 </Link>

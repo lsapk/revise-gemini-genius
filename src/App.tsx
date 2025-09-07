@@ -5,6 +5,7 @@ import { AppProvider } from '@/contexts/AppContext';
 import { Toaster } from '@/components/ui/toaster';
 import Index from '@/pages/Index';
 import AddContent from '@/pages/AddContent';
+import MyCourses from '@/pages/MyCourses';
 import SubjectDetail from '@/pages/SubjectDetail';
 import LessonDetail from '@/pages/LessonDetail';
 import Stats from '@/pages/Stats';
@@ -32,6 +33,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/add" element={<AddContent />} />
+              <Route path="/courses" element={<MyCourses />} />
               <Route path="/subject/:id" element={<SubjectDetail />} />
               <Route path="/lesson/:id" element={<LessonDetail />} />
               <Route path="/stats" element={<Stats />} />

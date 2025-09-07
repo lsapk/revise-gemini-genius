@@ -28,6 +28,7 @@ import { useApp } from '@/contexts/AppContext';
 
 const mainItems = [
   { title: 'Accueil', url: '/', icon: Home },
+  { title: 'Mes cours', url: '/courses', icon: BookOpen },
   { title: 'Ajouter', url: '/add', icon: Plus },
   { title: 'Planning', url: '/planning', icon: Calendar },
   { title: 'Assistant IA', url: '/assistant', icon: Brain },
