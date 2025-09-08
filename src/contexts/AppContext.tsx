@@ -1,13 +1,15 @@
-
 import { createContext, useContext, useEffect, useState } from 'react';
-import { useSupabaseStorage } from '@/hooks/useSupabaseStorage';
+import { useSupabaseData } from '@/hooks/useSupabaseData';
 
 interface AppContextType {
   subjects: any[];
+  lessons: any[];
   currentLesson: any | null;
   isDarkMode: boolean;
   geminiApiKey: string;
   stats: any;
+  loading: boolean;
+  user: any;
   
   // Actions
   refreshSubjects: () => void;
@@ -17,35 +19,37 @@ interface AppContextType {
   addStudySession: (session: any) => void;
   refreshStats: () => void;
   addSubject: (name: string, description?: string, color?: string) => Promise<any>;
-  addChapter: (subjectId: string, name: string) => Promise<any>;
-  addLesson: (chapterId: string, name: string, content: string) => Promise<any>;
+  addLesson: (subjectId: string, title: string, content?: string, type?: string, aiData?: any) => Promise<any>;
   deleteSubject: (id: string) => void;
+  getSubjectById: (id: string) => any;
+  getLessonById: (id: string) => any;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const { 
-    settings, 
-    subjects, 
-    saveSettings, 
-    addSubject: addSubjectToDb, 
-    addChapter: addChapterToDb,
+    subjects,
+    lessons,
+    loading,
+    user,
+    addSubject: addSubjectToDb,
     addLesson: addLessonToDb,
-    deleteSubject: deleteSubjectFromDb, 
-    refreshSubjects 
-  } = useSupabaseStorage();
+    deleteSubject: deleteSubjectFromDb,
+    getSubjectById,
+    getLessonById,
+    loadSubjects
+  } = useSupabaseData();
   
   const [currentLesson, setCurrentLesson] = useState<any | null>(null);
+  const [isDarkMode, setIsDarkMode] = useState(true); // Mode sombre par défaut
+  const [geminiApiKey, setGeminiApiKeyState] = useState('');
   const [stats] = useState<any>({
     totalStudyTime: 0,
     sessionsCompleted: 0,
     averageScore: 0,
     subjectStats: {}
   });
-
-  const isDarkMode = settings.dark_mode !== false; // Sombre par défaut
-  const geminiApiKey = settings.gemini_api_key || '';
 
   useEffect(() => {
     // Appliquer le mode sombre par défaut
@@ -58,9 +62,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isDarkMode]);
 
-  const toggleDarkMode = async () => {
+  const toggleDarkMode = () => {
     const newDarkMode = !isDarkMode;
-    await saveSettings({ dark_mode: newDarkMode });
+    setIsDarkMode(newDarkMode);
     
     if (newDarkMode) {
       document.documentElement.classList.remove('light');
@@ -71,20 +75,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const setGeminiApiKey = async (key: string) => {
-    await saveSettings({ gemini_api_key: key });
+  const setGeminiApiKey = (key: string) => {
+    setGeminiApiKeyState(key);
   };
 
   const addSubject = async (name: string, description?: string, color?: string) => {
     return await addSubjectToDb(name, description, color);
   };
 
-  const addChapter = async (subjectId: string, name: string) => {
-    return await addChapterToDb(subjectId, name);
-  };
-
-  const addLesson = async (chapterId: string, name: string, content: string) => {
-    return await addLessonToDb(chapterId, name, content);
+  const addLesson = async (subjectId: string, title: string, content?: string, type?: string, aiData?: any) => {
+    return await addLessonToDb(subjectId, title, content, type, aiData);
   };
 
   const deleteSubject = async (id: string) => {
@@ -99,13 +99,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     console.log('Rafraîchissement des statistiques');
   };
 
+  const refreshSubjects = () => {
+    loadSubjects();
+  };
+
   return (
     <AppContext.Provider value={{
       subjects,
+      lessons,
       currentLesson,
       isDarkMode,
       geminiApiKey,
       stats,
+      loading,
+      user,
       refreshSubjects,
       setCurrentLesson,
       toggleDarkMode,
@@ -113,9 +120,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       addStudySession,
       refreshStats,
       addSubject,
-      addChapter,
       addLesson,
-      deleteSubject
+      deleteSubject,
+      getSubjectById,
+      getLessonById
     }}>
       {children}
     </AppContext.Provider>

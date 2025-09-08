@@ -19,14 +19,14 @@ import {
 
 export default function SubjectDetail() {
   const { subjectId } = useParams();
-  const { subjects, deleteSubject } = useApp();
+  const { subjects, lessons, deleteSubject, getSubjectById } = useApp();
   const [subject, setSubject] = useState<any>(null);
-  const [lessons] = useState<any[]>([]); // Sera rempli avec les vraies données plus tard
+  const subjectLessons = lessons.filter(lesson => lesson.subject_id === subjectId);
 
   useEffect(() => {
-    const foundSubject = subjects.find(s => s.id === subjectId);
+    const foundSubject = getSubjectById(subjectId || '');
     setSubject(foundSubject);
-  }, [subjectId, subjects]);
+  }, [subjectId, getSubjectById]);
 
   const handleDeleteSubject = async () => {
     if (subject && window.confirm(`Êtes-vous sûr de vouloir supprimer la matière "${subject.name}" ?`)) {
@@ -90,8 +90,8 @@ export default function SubjectDetail() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="text-center p-4 bg-blue-50 dark:bg-blue-950/30 rounded-xl">
                 <FileText className="w-6 h-6 text-blue-600 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-blue-600">{lessons.length}</p>
-                <p className="text-sm text-muted-foreground">Chapitres</p>
+                <p className="text-2xl font-bold text-blue-600">{subjectLessons.length}</p>
+                <p className="text-sm text-muted-foreground">Cours</p>
               </div>
               <div className="text-center p-4 bg-green-50 dark:bg-green-950/30 rounded-xl">
                 <TrendingUp className="w-6 h-6 text-green-600 mx-auto mb-2" />
@@ -130,32 +130,32 @@ export default function SubjectDetail() {
           </ModernCardContent>
         </ModernCard>
 
-        {/* Liste des chapitres */}
+        {/* Liste des cours */}
         <ModernCard>
           <ModernCardHeader>
             <div className="flex items-center justify-between">
-              <ModernCardTitle>Chapitres</ModernCardTitle>
-              <Badge variant="secondary">{lessons.length} chapitre{lessons.length > 1 ? 's' : ''}</Badge>
+              <ModernCardTitle>Cours</ModernCardTitle>
+              <Badge variant="secondary">{subjectLessons.length} cours</Badge>
             </div>
           </ModernCardHeader>
           <ModernCardContent>
-            {lessons.length === 0 ? (
+            {subjectLessons.length === 0 ? (
               <div className="text-center py-12">
                 <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Aucun chapitre</h3>
+                <h3 className="text-lg font-semibold mb-2">Aucun cours</h3>
                 <p className="text-muted-foreground mb-6">
-                  Commencez par ajouter votre premier chapitre à cette matière.
+                  Commencez par ajouter votre premier cours à cette matière.
                 </p>
                 <Link to="/add">
                   <Button>
                     <Plus className="w-4 h-4 mr-2" />
-                    Ajouter un chapitre
+                    Ajouter un cours
                   </Button>
                 </Link>
               </div>
             ) : (
               <div className="space-y-3">
-                {lessons.map((lesson, index) => (
+                {subjectLessons.map((lesson, index) => (
                   <div
                     key={lesson.id}
                     className="p-4 border rounded-xl hover:shadow-md transition-all hover:border-primary/30"
@@ -168,7 +168,7 @@ export default function SubjectDetail() {
                         <div>
                           <h3 className="font-medium">{lesson.title}</h3>
                           <p className="text-sm text-muted-foreground">
-                            {lesson.type} • Ajouté le {new Date(lesson.createdAt).toLocaleDateString('fr-FR')}
+                            {lesson.type} • Ajouté le {new Date(lesson.created_at).toLocaleDateString('fr-FR')}
                           </p>
                         </div>
                       </div>

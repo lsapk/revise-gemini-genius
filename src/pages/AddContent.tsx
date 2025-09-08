@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Layout } from '@/components/Layout/Layout';
 import { ModernContentTypeSelector } from '@/components/Add/ModernContentTypeSelector';
@@ -10,7 +9,6 @@ import { ContentAnalysisForm } from '@/components/Add/ContentAnalysisForm';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
 import { toast } from 'sonner';
-import { storage } from '@/lib/storage';
 
 type ContentType = 'text' | 'pdf' | 'image' | 'url' | null;
 type Step = 'select' | 'input' | 'form' | 'processing' | 'success';
@@ -18,7 +16,7 @@ type Step = 'select' | 'input' | 'form' | 'processing' | 'success';
 export default function AddContent() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { subjects, addSubject, addChapter, refreshSubjects } = useApp();
+  const { subjects, addSubject, addLesson } = useApp();
   
   const initialType = searchParams.get('type') as ContentType;
   const [selectedType, setSelectedType] = useState<ContentType>(initialType);
@@ -27,9 +25,7 @@ export default function AddContent() {
   const [processingStep, setProcessingStep] = useState(0);
   const [lessonTitle, setLessonTitle] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
-  const [selectedChapter, setSelectedChapter] = useState('');
   const [newSubjectName, setNewSubjectName] = useState('');
-  const [newChapterName, setNewChapterName] = useState('');
 
   const stepNames = [
     'Analyse du contenu',
@@ -60,7 +56,6 @@ export default function AddContent() {
 
     try {
       let subjectId = selectedSubject;
-      let chapterId = selectedChapter;
 
       // Créer la matière si nécessaire
       if (newSubjectName.trim()) {
@@ -69,36 +64,30 @@ export default function AddContent() {
         toast.success(`Matière "${newSubjectName}" créée !`);
       }
 
-      // Créer le chapitre si nécessaire
-      if (newChapterName.trim() && subjectId) {
-        const newChapter = await addChapter(subjectId, newChapterName.trim());
-        chapterId = newChapter?.id || '';
-        toast.success(`Chapitre "${newChapterName}" créé !`);
+      // Si pas de matière sélectionnée, utiliser la première disponible ou en créer une
+      if (!subjectId) {
+        if (subjects.length > 0) {
+          subjectId = subjects[0].id;
+        } else {
+          const defaultSubject = await addSubject('Matière générale', 'Matière créée automatiquement');
+          subjectId = defaultSubject?.id || '';
+        }
       }
 
-      // Si pas de chapitre, créer un chapitre par défaut
-      if (!chapterId && subjectId) {
-        const defaultChapter = await addChapter(subjectId, 'Cours général');
-        chapterId = defaultChapter?.id || '';
-      }
-
-      if (!subjectId || !chapterId) {
-        throw new Error('Impossible de créer ou trouver la matière/chapitre');
+      if (!subjectId) {
+        throw new Error('Impossible de créer ou trouver la matière');
       }
 
       // Simuler le processus d'analyse IA et sauvegarder
-      const interval = setInterval(async () => {
+      const interval = setInterval(() => {
         setProcessingStep(prev => {
           if (prev >= stepNames.length) {
             clearInterval(interval);
             
-            // Sauvegarder le cours avec useSupabaseStorage
-            try {
-              const success = storage.addLesson(chapterId, {
-                title: lessonTitle.trim(),
-                content: content,
-                type: selectedType as 'text' | 'pdf' | 'image' | 'url',
-                aiGenerated: {
+            // Créer le cours avec les données IA
+            const createLesson = async () => {
+              try {
+                const aiData = {
                   summary: { 
                     content: 'Résumé généré automatiquement à partir du contenu du cours...',
                     keyPoints: ['Point clé 1', 'Point clé 2', 'Point clé 3']
@@ -121,23 +110,30 @@ export default function AddContent() {
                     content: 'Fiche de révision générée automatiquement...',
                     sections: ['Section 1', 'Section 2']
                   }
-                }
-              });
+                };
 
-              if (success) {
-                toast.success('Cours créé avec succès !');
-                // Refresh pour synchroniser les données
-                refreshSubjects();
-                setCurrentStep('success');
-              } else {
-                throw new Error('Erreur lors de la sauvegarde');
+                const result = await addLesson(
+                  subjectId,
+                  lessonTitle.trim(),
+                  content,
+                  selectedType || 'lesson',
+                  aiData
+                );
+
+                if (result) {
+                  toast.success('Cours créé avec succès !');
+                  setCurrentStep('success');
+                } else {
+                  throw new Error('Erreur lors de la sauvegarde');
+                }
+              } catch (error) {
+                console.error('Erreur sauvegarde:', error);
+                toast.error('Erreur lors de la sauvegarde du cours');
+                setCurrentStep('form');
               }
-            } catch (error) {
-              console.error('Erreur sauvegarde:', error);
-              toast.error('Erreur lors de la sauvegarde du cours');
-              setCurrentStep('form');
-            }
-            
+            };
+
+            createLesson();
             return prev;
           }
           return prev + 1;
@@ -158,9 +154,7 @@ export default function AddContent() {
     setProcessingStep(0);
     setLessonTitle('');
     setSelectedSubject('');
-    setSelectedChapter('');
     setNewSubjectName('');
-    setNewChapterName('');
   };
 
   const handleGoHome = () => {
@@ -202,12 +196,12 @@ export default function AddContent() {
               setLessonTitle={setLessonTitle}
               selectedSubject={selectedSubject}
               setSelectedSubject={setSelectedSubject}
-              selectedChapter={selectedChapter}
-              setSelectedChapter={setSelectedChapter}
+              selectedChapter=""
+              setSelectedChapter={() => {}}
               newSubjectName={newSubjectName}
               setNewSubjectName={setNewSubjectName}
-              newChapterName={newChapterName}
-              setNewChapterName={setNewChapterName}
+              newChapterName=""
+              setNewChapterName={() => {}}
               onSave={handleFormSave}
               isProcessing={false}
             />

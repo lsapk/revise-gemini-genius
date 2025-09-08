@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -835,6 +835,7 @@ export type Database = {
           id: string
           is_archived: boolean | null
           last_completed_at: string | null
+          linked_goal_id: string | null
           sort_order: number | null
           streak: number | null
           target: number
@@ -850,6 +851,7 @@ export type Database = {
           id?: string
           is_archived?: boolean | null
           last_completed_at?: string | null
+          linked_goal_id?: string | null
           sort_order?: number | null
           streak?: number | null
           target: number
@@ -865,6 +867,7 @@ export type Database = {
           id?: string
           is_archived?: boolean | null
           last_completed_at?: string | null
+          linked_goal_id?: string | null
           sort_order?: number | null
           streak?: number | null
           target?: number
@@ -872,7 +875,15 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "habits_linked_goal_id_fkey"
+            columns: ["linked_goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       installed_nodes: {
         Row: {
@@ -1342,6 +1353,50 @@ export type Database = {
         }
         Relationships: []
       }
+      subobjectives: {
+        Row: {
+          completed: boolean
+          created_at: string | null
+          description: string | null
+          id: string
+          parent_goal_id: string
+          sort_order: number | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          parent_goal_id: string
+          sort_order?: number | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          parent_goal_id?: string
+          sort_order?: number | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subobjectives_parent_goal_id_fkey"
+            columns: ["parent_goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscribers: {
         Row: {
           created_at: string
@@ -1418,8 +1473,10 @@ export type Database = {
         Row: {
           completed: boolean
           created_at: string
+          description: string | null
           id: string
           parent_task_id: string
+          priority: string | null
           sort_order: number | null
           title: string
           updated_at: string
@@ -1428,8 +1485,10 @@ export type Database = {
         Insert: {
           completed?: boolean
           created_at?: string
+          description?: string | null
           id?: string
           parent_task_id: string
+          priority?: string | null
           sort_order?: number | null
           title: string
           updated_at?: string
@@ -1438,8 +1497,10 @@ export type Database = {
         Update: {
           completed?: boolean
           created_at?: string
+          description?: string | null
           id?: string
           parent_task_id?: string
+          priority?: string | null
           sort_order?: number | null
           title?: string
           updated_at?: string
@@ -1483,6 +1544,7 @@ export type Database = {
           description: string | null
           due_date: string | null
           id: string
+          linked_goal_id: string | null
           parent_task_id: string | null
           priority: string | null
           sort_order: number | null
@@ -1496,6 +1558,7 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          linked_goal_id?: string | null
           parent_task_id?: string | null
           priority?: string | null
           sort_order?: number | null
@@ -1509,6 +1572,7 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          linked_goal_id?: string | null
           parent_task_id?: string | null
           priority?: string | null
           sort_order?: number | null
@@ -1517,6 +1581,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "tasks_linked_goal_id_fkey"
+            columns: ["linked_goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tasks_parent_task_id_fkey"
             columns: ["parent_task_id"]
@@ -1968,7 +2039,7 @@ export type Database = {
           sprints: number | null
           status: string
           updated_at: string | null
-          user_id: string | null
+          user_id: string
           veo_url: string
           video_url: string | null
         }
@@ -1984,7 +2055,7 @@ export type Database = {
           sprints?: number | null
           status?: string
           updated_at?: string | null
-          user_id?: string | null
+          user_id: string
           veo_url: string
           video_url?: string | null
         }
@@ -2000,7 +2071,7 @@ export type Database = {
           sprints?: number | null
           status?: string
           updated_at?: string | null
-          user_id?: string | null
+          user_id?: string
           veo_url?: string
           video_url?: string | null
         }
