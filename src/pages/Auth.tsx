@@ -129,6 +129,39 @@ export default function Auth() {
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!email) {
+      toast({
+        title: "Email requis",
+        description: "Veuillez saisir votre email",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      if (error) {
+        toast({
+          title: "Erreur",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Email envoyé !",
+          description: "Vérifiez votre boîte mail pour réinitialiser votre mot de passe"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Une erreur inattendue s'est produite",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-secondary/20 p-4">
       <div className="w-full max-w-md">
@@ -199,6 +232,15 @@ export default function Auth() {
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "Connexion..." : "Se connecter"}
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    className="w-full" 
+                    onClick={handleResetPassword}
+                    disabled={loading}
+                  >
+                    Mot de passe oublié ?
                   </Button>
                 </form>
               </TabsContent>
