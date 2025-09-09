@@ -1,5 +1,5 @@
 
-import { Settings } from 'lucide-react';
+import { Settings, LogOut, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -10,14 +10,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function AuthenticatedHeader() {
+  const { user, signOut } = useAuth();
+
   const getDisplayName = () => {
-    return 'Utilisateur';
+    return user?.email?.split('@')[0] || 'Utilisateur';
   };
 
   const getInitials = () => {
-    return 'U';
+    const name = getDisplayName();
+    return name.charAt(0).toUpperCase();
   };
 
   return (
@@ -37,7 +41,7 @@ export function AuthenticatedHeader() {
           <div className="flex flex-col space-y-1 leading-none">
             <p className="font-medium">{getDisplayName()}</p>
             <p className="w-[200px] truncate text-sm text-muted-foreground">
-              Mode hors ligne
+              {user?.email}
             </p>
           </div>
         </div>
@@ -49,6 +53,16 @@ export function AuthenticatedHeader() {
             <Settings className="mr-2 h-4 w-4" />
             <span>Paramètres</span>
           </Link>
+        </DropdownMenuItem>
+        
+        <DropdownMenuSeparator />
+        
+        <DropdownMenuItem
+          className="flex items-center text-red-600 focus:text-red-600 cursor-pointer"
+          onClick={signOut}
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Se déconnecter</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
