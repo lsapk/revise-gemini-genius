@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useApp } from '@/contexts/AppContext';
 import { Link } from 'react-router-dom';
+import { getSubjectAnalytics, StudySession, Lesson } from '@/components/Analytics/RealStatsCalculator';
 
 interface Subject {
   id: string;
@@ -18,10 +19,15 @@ interface Subject {
 
 interface ModernSubjectCardProps {
   subject: Subject;
+  lessons?: Lesson[];
+  studySessions?: StudySession[];
 }
 
-export function ModernSubjectCard({ subject }: ModernSubjectCardProps) {
+export function ModernSubjectCard({ subject, lessons = [], studySessions = [] }: ModernSubjectCardProps) {
   const { deleteSubject } = useApp();
+
+  // Calculer les vraies analyses pour cette matière
+  const analytics = getSubjectAnalytics(subject.id, lessons, studySessions);
 
   const handleDelete = async () => {
     if (confirm(`Êtes-vous sûr de vouloir supprimer la matière "${subject.name}" ?`)) {
@@ -82,17 +88,17 @@ export function ModernSubjectCard({ subject }: ModernSubjectCardProps) {
           <div className="bg-muted/50 rounded-xl p-3">
             <FileText className="w-5 h-5 mx-auto mb-1 text-blue-600" />
             <p className="text-xs font-medium text-muted-foreground">Résumés</p>
-            <p className="text-sm font-bold">3</p>
+            <p className="text-sm font-bold">{analytics.summariesCount}</p>
           </div>
           <div className="bg-muted/50 rounded-xl p-3">
             <Brain className="w-5 h-5 mx-auto mb-1 text-green-600" />
             <p className="text-xs font-medium text-muted-foreground">QCM</p>
-            <p className="text-sm font-bold">5</p>
+            <p className="text-sm font-bold">{analytics.quizzesCount}</p>
           </div>
           <div className="bg-muted/50 rounded-xl p-3">
             <Play className="w-5 h-5 mx-auto mb-1 text-purple-600" />
             <p className="text-xs font-medium text-muted-foreground">Flash</p>
-            <p className="text-sm font-bold">12</p>
+            <p className="text-sm font-bold">{analytics.flashcardsCount}</p>
           </div>
         </div>
 
@@ -115,8 +121,8 @@ export function ModernSubjectCard({ subject }: ModernSubjectCardProps) {
             size="sm"
             icon={<FileText />}
           >
-            <Link to={`/subject/${subject.id}/lessons`}>
-              Cours
+            <Link to={`/subject/${subject.id}`}>
+              Voir Cours
             </Link>
           </ModernButton>
         </div>

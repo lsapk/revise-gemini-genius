@@ -56,6 +56,11 @@ function App() {
                     <SubjectDetail />
                   </AuthGuard>
                 } />
+                <Route path="/subject/:id/lessons" element={
+                  <AuthGuard>
+                    <SubjectDetail />
+                  </AuthGuard>
+                } />
                 <Route path="/lesson/:id" element={
                   <AuthGuard>
                     <LessonDetail />
