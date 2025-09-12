@@ -25,19 +25,19 @@ import { QuizResults } from '@/components/Quiz/QuizResults';
 export default function LessonDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { addStudySession } = useApp();
+  const { getLessonById, loading: dataLoading } = useApp();
   const [lesson, setLesson] = useState<any>(null);
   const [quizResults, setQuizResults] = useState<any>(null);
   const [flashcardResults, setFlashcardResults] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (id) {
-      const lessonData = storage.getLesson(id);
+    if (id && !dataLoading) {
+      const lessonData = getLessonById(id);
       setLesson(lessonData);
       setLoading(false);
     }
-  }, [id]);
+  }, [id, getLessonById, dataLoading]);
 
   const handleQuizComplete = (score: number, totalQuestions: number, duration: number) => {
     const results = {
@@ -48,7 +48,8 @@ export default function LessonDetail() {
     };
     setQuizResults(results);
     
-    addStudySession({
+    // TODO: Implémenter l'ajout de session d'étude dans Supabase
+    console.log('Session d\'étude QCM:', {
       lessonId: id!,
       type: 'qcm',
       score,
@@ -65,7 +66,8 @@ export default function LessonDetail() {
     };
     setFlashcardResults(results);
     
-    addStudySession({
+    // TODO: Implémenter l'ajout de session d'étude dans Supabase
+    console.log('Session d\'étude Flashcards:', {
       lessonId: id!,
       type: 'flashcards',
       score: easyCount,
@@ -117,11 +119,11 @@ export default function LessonDetail() {
     });
   };
 
-  const hasAiContent = lesson.aiGenerated && (
-    lesson.aiGenerated.summary || 
-    lesson.aiGenerated.qcm || 
-    lesson.aiGenerated.flashcards || 
-    lesson.aiGenerated.fiche
+  const hasAiContent = lesson.data && (
+    lesson.data.summary || 
+    lesson.data.qcm || 
+    lesson.data.flashcards || 
+    lesson.data.fiche
   );
 
   return (
@@ -138,9 +140,8 @@ export default function LessonDetail() {
             <div>
               <h1 className="text-3xl font-bold text-foreground">{lesson.title}</h1>
               <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-                <span className="flex items-center gap-1">
-                  <Clock className="w-4 h-4" />
-                  {formatDate(lesson.createdAt)}
+                <span className="text-sm text-muted-foreground">
+                  {lesson.type} • Ajouté le {new Date(lesson.created_at).toLocaleDateString('fr-FR')}
                 </span>
                 {lesson.type && (
                   <span className="px-2 py-1 bg-primary/10 text-primary rounded uppercase font-medium">
@@ -155,7 +156,7 @@ export default function LessonDetail() {
         {/* Quick Actions */}
         {hasAiContent && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {lesson.aiGenerated?.qcm && (
+            {lesson.data?.qcm && (
               <ModernButton 
                 variant="outline" 
                 size="sm"
@@ -165,7 +166,7 @@ export default function LessonDetail() {
                 QCM
               </ModernButton>
             )}
-            {lesson.aiGenerated?.flashcards && (
+            {lesson.data?.flashcards && (
               <ModernButton 
                 variant="outline" 
                 size="sm"
@@ -175,7 +176,7 @@ export default function LessonDetail() {
                 Flashcards
               </ModernButton>
             )}
-            {lesson.aiGenerated?.summary && (
+            {lesson.data?.summary && (
               <ModernButton 
                 variant="outline" 
                 size="sm"
@@ -185,7 +186,7 @@ export default function LessonDetail() {
                 Résumé
               </ModernButton>
             )}
-            {lesson.aiGenerated?.fiche && (
+            {lesson.data?.fiche && (
               <ModernButton 
                 variant="outline" 
                 size="sm"
@@ -207,25 +208,25 @@ export default function LessonDetail() {
                   <BookOpen className="w-4 h-4" />
                   Contenu
                 </TabsTrigger>
-                {lesson.aiGenerated?.summary && (
+                {lesson.data?.summary && (
                   <TabsTrigger value="summary" id="summary-tab" className="flex items-center gap-2">
                     <Brain className="w-4 h-4" />
                     Résumé
                   </TabsTrigger>
                 )}
-                {lesson.aiGenerated?.qcm && (
+                {lesson.data?.qcm && (
                   <TabsTrigger value="qcm" id="qcm-tab" className="flex items-center gap-2">
                     <Target className="w-4 h-4" />
                     QCM
                   </TabsTrigger>
                 )}
-                {lesson.aiGenerated?.flashcards && (
+                {lesson.data?.flashcards && (
                   <TabsTrigger value="flashcards" id="flashcards-tab" className="flex items-center gap-2">
                     <Zap className="w-4 h-4" />
                     Flashcards
                   </TabsTrigger>
                 )}
-                {lesson.aiGenerated?.fiche && (
+                {lesson.data?.fiche && (
                   <TabsTrigger value="fiche" id="fiche-tab" className="flex items-center gap-2">
                     <FileText className="w-4 h-4" />
                     Fiche
@@ -248,7 +249,7 @@ export default function LessonDetail() {
               </TabsContent>
 
               {/* Résumé IA */}
-              {lesson.aiGenerated?.summary && (
+              {lesson.data?.summary && (
                 <TabsContent value="summary" className="mt-6">
                   <div className="space-y-4">
                     <div className="flex items-center gap-3 mb-4">
@@ -266,13 +267,13 @@ export default function LessonDetail() {
                     </div>
                     <div className="bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20 rounded-lg p-6 border border-purple-200/30 dark:border-purple-800/30">
                       <p className="text-card-foreground leading-relaxed">
-                        {lesson.aiGenerated.summary.content}
+                        {lesson.data.summary.content || lesson.data.summary}
                       </p>
-                      {lesson.aiGenerated.summary.keyPoints && (
+                      {lesson.data.summary.keyPoints && (
                         <div className="mt-4">
                           <h4 className="font-semibold text-card-foreground mb-2">Points clés :</h4>
                           <ul className="space-y-1">
-                            {lesson.aiGenerated.summary.keyPoints.map((point: string, index: number) => (
+                            {lesson.data.summary.keyPoints.map((point: string, index: number) => (
                               <li key={index} className="flex items-start gap-2 text-card-foreground">
                                 <div className="w-1.5 h-1.5 bg-purple-500 rounded-full mt-2 flex-shrink-0"></div>
                                 {point}
@@ -287,7 +288,7 @@ export default function LessonDetail() {
               )}
 
               {/* QCM */}
-              {lesson.aiGenerated?.qcm && (
+              {lesson.data?.qcm && (
                 <TabsContent value="qcm" className="mt-6">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between mb-4">
@@ -352,7 +353,7 @@ export default function LessonDetail() {
                       </div>
                     ) : (
                       <QuizView 
-                        questions={lesson.aiGenerated.qcm.questions}
+                        questions={lesson.data.qcm.questions || lesson.data.qcm}
                         onComplete={handleQuizComplete}
                       />
                     )}
@@ -361,7 +362,7 @@ export default function LessonDetail() {
               )}
 
               {/* Flashcards */}
-              {lesson.aiGenerated?.flashcards && (
+              {lesson.data?.flashcards && (
                 <TabsContent value="flashcards" className="mt-6">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between mb-4">
@@ -426,7 +427,7 @@ export default function LessonDetail() {
                       </div>
                     ) : (
                       <FlashcardView 
-                        cards={lesson.aiGenerated.flashcards.cards}
+                        cards={lesson.data.flashcards.cards || lesson.data.flashcards}
                         onComplete={handleFlashcardComplete}
                       />
                     )}
@@ -435,7 +436,7 @@ export default function LessonDetail() {
               )}
 
               {/* Fiche de révision */}
-              {lesson.aiGenerated?.fiche && (
+              {lesson.data?.fiche && (
                 <TabsContent value="fiche" className="mt-6">
                   <div className="space-y-4">
                     <div className="flex items-center gap-3 mb-4">
@@ -454,13 +455,13 @@ export default function LessonDetail() {
                     <div className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/20 rounded-lg p-6 border border-orange-200/30 dark:border-orange-800/30">
                       <div className="prose max-w-none dark:prose-invert">
                         <p className="text-card-foreground leading-relaxed">
-                          {lesson.aiGenerated.fiche.content}
+                          {lesson.data.fiche.content || lesson.data.fiche}
                         </p>
-                        {lesson.aiGenerated.fiche.sections && (
+                        {lesson.data.fiche.sections && (
                           <div className="mt-4">
                             <h4 className="font-semibold text-card-foreground mb-2">Sections :</h4>
                             <div className="space-y-2">
-                              {lesson.aiGenerated.fiche.sections.map((section: string, index: number) => (
+                              {lesson.data.fiche.sections.map((section: string, index: number) => (
                                 <div key={index} className="bg-background/50 rounded-lg p-3">
                                   {section}
                                 </div>
