@@ -14,7 +14,7 @@ export function ModernBottomNavigation() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-t border-gray-200/50 dark:border-gray-700/50 z-50 md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 bg-background/90 backdrop-blur-xl border-t border-border z-50 md:hidden">
       <div className="flex items-center justify-around py-2 px-4">
         {navItems.map(({ path, icon: Icon, label, special }) => {
           const isActive = location.pathname === path;
@@ -25,10 +25,10 @@ export function ModernBottomNavigation() {
               className={cn(
                 "flex flex-col items-center justify-center py-3 px-4 rounded-2xl transition-all duration-300 min-w-[64px] relative",
                 special 
-                  ? "bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/30 scale-110 -mt-2" 
+                  ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-110 -mt-2" 
                   : isActive 
-                    ? "text-primary-600 bg-primary-50 dark:bg-primary-950/30 scale-105" 
-                    : "text-gray-600 dark:text-gray-400 hover:text-primary-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    ? "text-primary bg-primary/10 scale-105" 
+                    : "text-muted-foreground hover:text-primary hover:bg-muted"
               )}
             >
               {special && (
@@ -38,11 +38,11 @@ export function ModernBottomNavigation() {
               )}
               <Icon className={cn(
                 "w-5 h-5 mb-1",
-                special ? "text-white" : ""
+                special ? "text-primary-foreground" : ""
               )} />
               <span className={cn(
                 "text-xs font-medium",
-                special ? "text-white" : ""
+                special ? "text-primary-foreground" : ""
               )}>
                 {label}
               </span>

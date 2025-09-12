@@ -1,35 +1,40 @@
-
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { Layout } from '@/components/Layout/Layout';
-import { ProfessionalCard, ProfessionalCardContent } from '@/components/ui/professional-card';
-import { ModernButton } from '@/components/ui/modern-button';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { 
   ArrowLeft, 
+  Play, 
   BookOpen, 
   Brain, 
-  Target, 
-  Zap, 
+  CreditCard, 
   FileText, 
+  Calendar,
   Clock,
-  Play,
-  Award
+  Award,
+  Target,
+  Zap
 } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
-import { storage } from '@/lib/storage';
 import { QuizView } from '@/components/Quiz/QuizView';
 import { FlashcardView } from '@/components/Flashcards/FlashcardView';
 import { QuizResults } from '@/components/Quiz/QuizResults';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function LessonDetail() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { getLessonById, loading: dataLoading } = useApp();
   const [lesson, setLesson] = useState<any>(null);
-  const [quizResults, setQuizResults] = useState<any>(null);
-  const [flashcardResults, setFlashcardResults] = useState<any>(null);
+  const [showQuizResults, setShowQuizResults] = useState(false);
+  const [quizScore, setQuizScore] = useState(0);
+  const [quizDuration, setQuizDuration] = useState(0);
   const [loading, setLoading] = useState(true);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (id && !dataLoading) {
@@ -40,44 +45,14 @@ export default function LessonDetail() {
   }, [id, getLessonById, dataLoading]);
 
   const handleQuizComplete = (score: number, totalQuestions: number, duration: number) => {
-    const results = {
-      score,
-      totalQuestions,
-      duration,
-      percentage: Math.round((score / totalQuestions) * 100)
-    };
-    setQuizResults(results);
-    
-    // TODO: Implémenter l'ajout de session d'étude dans Supabase
-    console.log('Session d\'étude QCM:', {
-      lessonId: id!,
-      type: 'qcm',
-      score,
-      totalQuestions,
-      duration
-    });
+    setQuizScore(score);
+    setQuizDuration(duration);
+    setShowQuizResults(true);
   };
 
-  const handleFlashcardComplete = (easyCount: number, hardCount: number) => {
-    const results = {
-      easyCount,
-      hardCount,
-      totalCards: easyCount + hardCount
-    };
-    setFlashcardResults(results);
-    
-    // TODO: Implémenter l'ajout de session d'étude dans Supabase
-    console.log('Session d\'étude Flashcards:', {
-      lessonId: id!,
-      type: 'flashcards',
-      score: easyCount,
-      totalQuestions: easyCount + hardCount,
-      duration: 300 // 5 minutes par défaut
-    });
+  const handleFlashcardsComplete = (easyCount: number, hardCount: number) => {
+    console.log('Flashcards terminées:', { easyCount, hardCount });
   };
-
-  const resetQuiz = () => setQuizResults(null);
-  const resetFlashcards = () => setFlashcardResults(null);
 
   if (loading) {
     return (
@@ -97,387 +72,249 @@ export default function LessonDetail() {
       <Layout title="Cours introuvable">
         <div className="text-center py-12">
           <BookOpen className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-card-foreground mb-2">Cours introuvable</h2>
+          <h2 className="text-2xl font-bold mb-2">Cours introuvable</h2>
           <p className="text-muted-foreground mb-6">
             Le cours que vous recherchez n'existe pas ou a été supprimé.
           </p>
           <Link to="/courses">
-            <ModernButton variant="gradient" icon={<ArrowLeft />}>
+            <Button variant="outline" className="flex items-center gap-2">
+              <ArrowLeft className="w-4 h-4" />
               Retour aux cours
-            </ModernButton>
+            </Button>
           </Link>
         </div>
       </Layout>
     );
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
-  const hasAiContent = lesson.data && (
-    lesson.data.summary || 
-    lesson.data.qcm || 
-    lesson.data.flashcards || 
-    lesson.data.fiche
-  );
+  // Extraire les données AI du cours
+  const aiData = lesson.data || lesson.aiGenerated || {};
+  const qcmQuestions = aiData.qcm?.questions || [];
+  const flashcards = aiData.flashcards?.cards || [];
+  const summary = aiData.summary?.content || aiData.summary?.title || '';
+  const fiche = aiData.fiche || {};
 
   return (
-    <Layout title={lesson.title}>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link to="/courses">
-              <ModernButton variant="outline" size="sm" icon={<ArrowLeft />}>
-                Retour
-              </ModernButton>
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">{lesson.title}</h1>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-                <span className="text-sm text-muted-foreground">
-                  {lesson.type} • Ajouté le {new Date(lesson.created_at).toLocaleDateString('fr-FR')}
-                </span>
-                {lesson.type && (
-                  <span className="px-2 py-1 bg-primary/10 text-primary rounded uppercase font-medium">
-                    {lesson.type}
-                  </span>
-                )}
-              </div>
+    <Layout title={lesson.title} className="space-y-6">
+      {/* Header avec navigation */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link to="/courses">
+            <Button variant="outline" size="sm" className="flex items-center gap-2">
+              <ArrowLeft className="w-4 h-4" />
+              {!isMobile && "Retour"}
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-2xl lg:text-3xl font-bold">{lesson.title}</h1>
+            <div className="flex items-center gap-2 mt-1">
+              <Badge variant="secondary">{lesson.type}</Badge>
+              <span className="text-sm text-muted-foreground">
+                {format(new Date(lesson.created_at), 'dd MMMM yyyy', { locale: fr })}
+              </span>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Quick Actions */}
-        {hasAiContent && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {lesson.data?.qcm && (
-              <ModernButton 
-                variant="outline" 
-                size="sm"
-                icon={<Target />}
-                onClick={() => document.getElementById('qcm-tab')?.click()}
-              >
-                QCM
-              </ModernButton>
-            )}
-            {lesson.data?.flashcards && (
-              <ModernButton 
-                variant="outline" 
-                size="sm"
-                icon={<Zap />}
-                onClick={() => document.getElementById('flashcards-tab')?.click()}
-              >
-                Flashcards
-              </ModernButton>
-            )}
-            {lesson.data?.summary && (
-              <ModernButton 
-                variant="outline" 
-                size="sm"
-                icon={<Brain />}
-                onClick={() => document.getElementById('summary-tab')?.click()}
-              >
-                Résumé
-              </ModernButton>
-            )}
-            {lesson.data?.fiche && (
-              <ModernButton 
-                variant="outline" 
-                size="sm"
-                icon={<FileText />}
-                onClick={() => document.getElementById('fiche-tab')?.click()}
-              >
-                Fiche
-              </ModernButton>
-            )}
-          </div>
-        )}
-
-        {/* Content Tabs */}
-        <ProfessionalCard>
-          <ProfessionalCardContent className="p-6">
-            <Tabs defaultValue="content" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 md:grid-cols-5">
-                <TabsTrigger value="content" className="flex items-center gap-2">
-                  <BookOpen className="w-4 h-4" />
-                  Contenu
+      {/* Contenu principal */}
+      <Card>
+        <CardContent className="p-6">
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className={`w-full ${isMobile ? 'flex-wrap gap-1' : 'grid grid-cols-5'}`}>
+              <TabsTrigger value="overview" className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4" />
+                {!isMobile && "Aperçu"}
+              </TabsTrigger>
+              {summary && (
+                <TabsTrigger value="summary" className="flex items-center gap-2">
+                  <Brain className="w-4 h-4" />
+                  {!isMobile && "Résumé"}
                 </TabsTrigger>
-                {lesson.data?.summary && (
-                  <TabsTrigger value="summary" id="summary-tab" className="flex items-center gap-2">
-                    <Brain className="w-4 h-4" />
-                    Résumé
-                  </TabsTrigger>
-                )}
-                {lesson.data?.qcm && (
-                  <TabsTrigger value="qcm" id="qcm-tab" className="flex items-center gap-2">
-                    <Target className="w-4 h-4" />
-                    QCM
-                  </TabsTrigger>
-                )}
-                {lesson.data?.flashcards && (
-                  <TabsTrigger value="flashcards" id="flashcards-tab" className="flex items-center gap-2">
-                    <Zap className="w-4 h-4" />
-                    Flashcards
-                  </TabsTrigger>
-                )}
-                {lesson.data?.fiche && (
-                  <TabsTrigger value="fiche" id="fiche-tab" className="flex items-center gap-2">
-                    <FileText className="w-4 h-4" />
-                    Fiche
-                  </TabsTrigger>
-                )}
-              </TabsList>
+              )}
+              {qcmQuestions.length > 0 && (
+                <TabsTrigger value="quiz" className="flex items-center gap-2">
+                  <Target className="w-4 h-4" />
+                  {!isMobile && "Quiz"}
+                </TabsTrigger>
+              )}
+              {flashcards.length > 0 && (
+                <TabsTrigger value="flashcards" className="flex items-center gap-2">
+                  <CreditCard className="w-4 h-4" />
+                  {!isMobile && "Cartes"}
+                </TabsTrigger>
+              )}
+              {(fiche.sections || fiche.content) && (
+                <TabsTrigger value="fiche" className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  {!isMobile && "Fiche"}
+                </TabsTrigger>
+              )}
+            </TabsList>
 
-              {/* Contenu original */}
-              <TabsContent value="content" className="mt-6">
-                <div className="prose max-w-none dark:prose-invert">
-                  <h3 className="text-xl font-semibold text-card-foreground mb-4">
-                    Contenu du cours
-                  </h3>
-                  <div className="bg-muted/30 rounded-lg p-6">
-                    <p className="text-card-foreground whitespace-pre-wrap leading-relaxed">
+            {/* Contenu original */}
+            <TabsContent value="overview" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>📚 Contenu du cours</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="prose dark:prose-invert max-w-none">
+                    <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
                       {lesson.content}
                     </p>
                   </div>
-                </div>
+                </CardContent>
+              </Card>
+
+              {/* Statistiques rapides */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {summary && (
+                  <Card className="text-center">
+                    <CardContent className="pt-6">
+                      <Brain className="w-8 h-8 text-primary mx-auto mb-2" />
+                      <p className="text-sm font-medium">Résumé IA</p>
+                      <p className="text-xs text-muted-foreground">Généré</p>
+                    </CardContent>
+                  </Card>
+                )}
+                {qcmQuestions.length > 0 && (
+                  <Card className="text-center">
+                    <CardContent className="pt-6">
+                      <Target className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                      <p className="text-sm font-medium">{qcmQuestions.length} Questions</p>
+                      <p className="text-xs text-muted-foreground">Quiz QCM</p>
+                    </CardContent>
+                  </Card>
+                )}
+                {flashcards.length > 0 && (
+                  <Card className="text-center">
+                    <CardContent className="pt-6">
+                      <CreditCard className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                      <p className="text-sm font-medium">{flashcards.length} Cartes</p>
+                      <p className="text-xs text-muted-foreground">Flashcards</p>
+                    </CardContent>
+                  </Card>
+                )}
+                {(fiche.sections || fiche.content) && (
+                  <Card className="text-center">
+                    <CardContent className="pt-6">
+                      <FileText className="w-8 h-8 text-orange-600 mx-auto mb-2" />
+                      <p className="text-sm font-medium">Fiche</p>
+                      <p className="text-xs text-muted-foreground">Révision</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
+
+            {/* Résumé IA */}
+            {summary && (
+              <TabsContent value="summary" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Brain className="w-5 h-5 text-primary" />
+                      Résumé automatique
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="prose dark:prose-invert max-w-none">
+                      {typeof summary === 'string' ? (
+                        <p className="text-muted-foreground leading-relaxed">{summary}</p>
+                      ) : (
+                        <div>
+                          {summary.title && <h3 className="font-semibold mb-3">{summary.title}</h3>}
+                          {summary.content && (
+                            <div 
+                              className="text-muted-foreground leading-relaxed"
+                              dangerouslySetInnerHTML={{ 
+                                __html: summary.content.replace(/\n/g, '<br>').replace(/##\s+(.*?)\n/g, '<h3 class="font-semibold mt-4 mb-2">$1</h3>') 
+                              }} 
+                            />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
               </TabsContent>
+            )}
 
-              {/* Résumé IA */}
-              {lesson.data?.summary && (
-                <TabsContent value="summary" className="mt-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-violet-500 rounded-xl flex items-center justify-center">
-                        <Brain className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-semibold text-card-foreground">
-                          Résumé automatique
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Généré par l'intelligence artificielle
-                        </p>
-                      </div>
-                    </div>
-                    <div className="bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20 rounded-lg p-6 border border-purple-200/30 dark:border-purple-800/30">
-                      <p className="text-card-foreground leading-relaxed">
-                        {lesson.data.summary.content || lesson.data.summary}
-                      </p>
-                      {lesson.data.summary.keyPoints && (
-                        <div className="mt-4">
-                          <h4 className="font-semibold text-card-foreground mb-2">Points clés :</h4>
-                          <ul className="space-y-1">
-                            {lesson.data.summary.keyPoints.map((point: string, index: number) => (
-                              <li key={index} className="flex items-start gap-2 text-card-foreground">
-                                <div className="w-1.5 h-1.5 bg-purple-500 rounded-full mt-2 flex-shrink-0"></div>
-                                {point}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </TabsContent>
-              )}
+            {/* Quiz QCM */}
+            {qcmQuestions.length > 0 && (
+              <TabsContent value="quiz">
+                {!showQuizResults ? (
+                  <QuizView
+                    questions={qcmQuestions}
+                    onComplete={handleQuizComplete}
+                    title={`Quiz - ${lesson.title}`}
+                  />
+                ) : (
+                  <QuizResults
+                    score={quizScore}
+                    totalQuestions={qcmQuestions.length}
+                    duration={quizDuration}
+                    onRetry={() => setShowQuizResults(false)}
+                  />
+                )}
+              </TabsContent>
+            )}
 
-              {/* QCM */}
-              {lesson.data?.qcm && (
-                <TabsContent value="qcm" className="mt-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
-                          <Target className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-semibold text-card-foreground">
-                            Quiz QCM
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            Testez vos connaissances
-                          </p>
-                        </div>
-                      </div>
-                      {quizResults && (
-                        <ModernButton 
-                          variant="outline" 
-                          size="sm"
-                          onClick={resetQuiz}
-                          icon={<Play />}
-                        >
-                          Recommencer
-                        </ModernButton>
-                      )}
-                    </div>
+            {/* Flashcards */}
+            {flashcards.length > 0 && (
+              <TabsContent value="flashcards">
+                <FlashcardView
+                  cards={flashcards}
+                  onComplete={handleFlashcardsComplete}
+                  title={`Flashcards - ${lesson.title}`}
+                />
+              </TabsContent>
+            )}
 
-                    {quizResults ? (
-                      <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 rounded-lg p-6 border border-green-200/30 dark:border-green-800/30">
-                        <div className="flex items-center gap-3 mb-4">
-                          <Award className="w-8 h-8 text-green-600" />
-                          <div>
-                            <h4 className="text-lg font-semibold text-card-foreground">
-                              Quiz terminé !
-                            </h4>
-                            <p className="text-sm text-muted-foreground">
-                              Excellent travail !
-                            </p>
+            {/* Fiche de révision */}
+            {(fiche.sections || fiche.content) && (
+              <TabsContent value="fiche" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="w-5 h-5 text-orange-600" />
+                      Fiche de révision
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {fiche.title && <h3 className="font-semibold text-lg">{fiche.title}</h3>}
+                      {fiche.sections && Array.isArray(fiche.sections) ? (
+                        fiche.sections.map((section: any, index: number) => (
+                          <div key={index} className="border-l-4 border-primary pl-4">
+                            <h4 className="font-medium mb-2">{section.title || `Section ${index + 1}`}</h4>
+                            {Array.isArray(section.content) ? (
+                              <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                                {section.content.map((item: string, itemIndex: number) => (
+                                  <li key={itemIndex}>{item}</li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p className="text-muted-foreground">{section.content || section}</p>
+                            )}
                           </div>
+                        ))
+                      ) : fiche.content ? (
+                        <div className="text-muted-foreground leading-relaxed">
+                          <div dangerouslySetInnerHTML={{ 
+                            __html: fiche.content.replace(/\n/g, '<br>').replace(/##\s+(.*?)\n/g, '<h3 class="font-semibold mt-4 mb-2">$1</h3>') 
+                          }} />
                         </div>
-                        <div className="grid grid-cols-3 gap-4 text-center">
-                          <div className="bg-background/50 rounded-lg p-3">
-                            <div className="text-2xl font-bold text-green-600">
-                              {quizResults.score}
-                            </div>
-                            <div className="text-xs text-muted-foreground">Correct</div>
-                          </div>
-                          <div className="bg-background/50 rounded-lg p-3">
-                            <div className="text-2xl font-bold text-orange-600">
-                              {quizResults.totalQuestions - quizResults.score}
-                            </div>
-                            <div className="text-xs text-muted-foreground">Incorrect</div>
-                          </div>
-                          <div className="bg-background/50 rounded-lg p-3">
-                            <div className="text-2xl font-bold text-primary">
-                              {quizResults.percentage}%
-                            </div>
-                            <div className="text-xs text-muted-foreground">Score</div>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <QuizView 
-                        questions={lesson.data.qcm.questions || lesson.data.qcm}
-                        onComplete={handleQuizComplete}
-                      />
-                    )}
-                  </div>
-                </TabsContent>
-              )}
-
-              {/* Flashcards */}
-              {lesson.data?.flashcards && (
-                <TabsContent value="flashcards" className="mt-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
-                          <Zap className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-semibold text-card-foreground">
-                            Flashcards
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            Mémorisation active
-                          </p>
-                        </div>
-                      </div>
-                      {flashcardResults && (
-                        <ModernButton 
-                          variant="outline" 
-                          size="sm"
-                          onClick={resetFlashcards}
-                          icon={<Play />}
-                        >
-                          Recommencer
-                        </ModernButton>
-                      )}
+                      ) : null}
                     </div>
-
-                    {flashcardResults ? (
-                      <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 rounded-lg p-6 border border-blue-200/30 dark:border-blue-800/30">
-                        <div className="flex items-center gap-3 mb-4">
-                          <Award className="w-8 h-8 text-blue-600" />
-                          <div>
-                            <h4 className="text-lg font-semibold text-card-foreground">
-                              Session terminée !
-                            </h4>
-                            <p className="text-sm text-muted-foreground">
-                              Beau travail !
-                            </p>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-3 gap-4 text-center">
-                          <div className="bg-background/50 rounded-lg p-3">
-                            <div className="text-2xl font-bold text-green-600">
-                              {flashcardResults.easyCount}
-                            </div>
-                            <div className="text-xs text-muted-foreground">Faciles</div>
-                          </div>
-                          <div className="bg-background/50 rounded-lg p-3">
-                            <div className="text-2xl font-bold text-orange-600">
-                              {flashcardResults.hardCount}
-                            </div>
-                            <div className="text-xs text-muted-foreground">Difficiles</div>
-                          </div>
-                          <div className="bg-background/50 rounded-lg p-3">
-                            <div className="text-2xl font-bold text-primary">
-                              {flashcardResults.totalCards}
-                            </div>
-                            <div className="text-xs text-muted-foreground">Total</div>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <FlashcardView 
-                        cards={lesson.data.flashcards.cards || lesson.data.flashcards}
-                        onComplete={handleFlashcardComplete}
-                      />
-                    )}
-                  </div>
-                </TabsContent>
-              )}
-
-              {/* Fiche de révision */}
-              {lesson.data?.fiche && (
-                <TabsContent value="fiche" className="mt-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
-                        <FileText className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-semibold text-card-foreground">
-                          Fiche de révision
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Synthèse pour réviser
-                        </p>
-                      </div>
-                    </div>
-                    <div className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/20 rounded-lg p-6 border border-orange-200/30 dark:border-orange-800/30">
-                      <div className="prose max-w-none dark:prose-invert">
-                        <p className="text-card-foreground leading-relaxed">
-                          {lesson.data.fiche.content || lesson.data.fiche}
-                        </p>
-                        {lesson.data.fiche.sections && (
-                          <div className="mt-4">
-                            <h4 className="font-semibold text-card-foreground mb-2">Sections :</h4>
-                            <div className="space-y-2">
-                              {lesson.data.fiche.sections.map((section: string, index: number) => (
-                                <div key={index} className="bg-background/50 rounded-lg p-3">
-                                  {section}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </TabsContent>
-              )}
-            </Tabs>
-          </ProfessionalCardContent>
-        </ProfessionalCard>
-      </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            )}
+          </Tabs>
+        </CardContent>
+      </Card>
     </Layout>
   );
 }

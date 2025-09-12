@@ -22,7 +22,7 @@ export function ModernTextInput({ onSubmit, isProcessing }: ModernTextInputProps
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="text-center space-y-4">
-        <div className="w-16 h-16 mx-auto bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg">
+        <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary to-primary/60 rounded-2xl flex items-center justify-center shadow-lg">
           <FileText className="w-8 h-8 text-white" />
         </div>
         <div>

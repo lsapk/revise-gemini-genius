@@ -8,6 +8,7 @@ import { ModernSuccessView } from '@/components/Add/ModernSuccessView';
 import { ContentAnalysisForm } from '@/components/Add/ContentAnalysisForm';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
+import { useAIGeneration } from '@/hooks/useAIGeneration';
 import { toast } from 'sonner';
 
 type ContentType = 'text' | 'pdf' | 'image' | 'url' | null;
@@ -17,6 +18,7 @@ export default function AddContent() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { subjects, addSubject, addLesson } = useApp();
+  const { generateAllContent } = useAIGeneration();
   
   const initialType = searchParams.get('type') as ContentType;
   const [selectedType, setSelectedType] = useState<ContentType>(initialType);
@@ -78,67 +80,42 @@ export default function AddContent() {
         throw new Error('Impossible de créer ou trouver la matière');
       }
 
-      // Simuler le processus d'analyse IA et sauvegarder
-      const interval = setInterval(() => {
-        setProcessingStep(prev => {
-          if (prev >= stepNames.length) {
-            clearInterval(interval);
-            
-            // Créer le cours avec les données IA
-            const createLesson = async () => {
-              try {
-                const aiData = {
-                  summary: { 
-                    content: 'Résumé généré automatiquement à partir du contenu du cours...',
-                    keyPoints: ['Point clé 1', 'Point clé 2', 'Point clé 3']
-                  },
-                  qcm: { 
-                    questions: [
-                      {
-                        question: 'Question exemple générée par l\'IA',
-                        options: ['Option A', 'Option B', 'Option C', 'Option D'],
-                        correct: 0
-                      }
-                    ]
-                  },
-                  flashcards: { 
-                    cards: [
-                      { front: 'Question flashcard', back: 'Réponse flashcard' }
-                    ]
-                  },
-                  fiche: { 
-                    content: 'Fiche de révision générée automatiquement...',
-                    sections: ['Section 1', 'Section 2']
-                  }
-                };
+      // Génération IA réelle avec l'API Gemini optimisée
+      const generateAIContent = async () => {
+        try {
+          setProcessingStep(1);
+          
+          // Génération de tout le contenu IA
+          const aiData = await generateAllContent(content);
+          
+          // Progression vers l'étape finale
+          setProcessingStep(stepNames.length);
 
-                const result = await addLesson(
-                  subjectId,
-                  lessonTitle.trim(),
-                  content,
-                  selectedType || 'lesson',
-                  aiData
-                );
+          // Sauvegarder le cours avec les vraies données IA
+          const result = await addLesson(
+            subjectId,
+            lessonTitle.trim(),
+            content,
+            selectedType || 'lesson',
+            aiData
+          );
 
-                if (result) {
-                  toast.success('Cours créé avec succès !');
-                  setCurrentStep('success');
-                } else {
-                  throw new Error('Erreur lors de la sauvegarde');
-                }
-              } catch (error) {
-                console.error('Erreur sauvegarde:', error);
-                toast.error('Erreur lors de la sauvegarde du cours');
-                setCurrentStep('form');
-              }
-            };
-
-            createLesson();
-            return prev;
+          if (result) {
+            toast.success('Cours créé avec succès !');
+            setCurrentStep('success');
+          } else {
+            throw new Error('Erreur lors de la sauvegarde');
           }
-          return prev + 1;
-        });
-      }, 1200);
+
+        } catch (error) {
+          console.error('Erreur génération IA:', error);
+          toast.error('Erreur lors de la génération IA : ' + (error instanceof Error ? error.message : 'Erreur inconnue'));
+          setCurrentStep('form');
+          setProcessingStep(0);
+        }
+      };
+
+      generateAIContent();
 
     } catch (error) {
       console.error('Erreur lors de la création:', error);
