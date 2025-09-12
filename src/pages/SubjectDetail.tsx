@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 
 export default function SubjectDetail() {
-  const { subjectId } = useParams();
+  const { id: subjectId } = useParams();
   const { subjects, lessons, deleteSubject, getSubjectById } = useApp();
   const [subject, setSubject] = useState<any>(null);
   const subjectLessons = lessons.filter(lesson => lesson.subject_id === subjectId);
@@ -77,7 +77,7 @@ export default function SubjectDetail() {
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => window.alert('Fonctionnalité à venir')}>
                   <Edit className="w-4 h-4" />
                 </Button>
                 <Button variant="outline" size="sm" onClick={handleDeleteSubject}>
@@ -114,10 +114,10 @@ export default function SubjectDetail() {
           </ModernCardHeader>
           <ModernCardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Link to="/add">
+              <Link to={`/add?subject=${subjectId}`}>
                 <Button className="w-full h-16 flex flex-col gap-2">
                   <Plus className="w-5 h-5" />
-                  <span className="text-sm">Ajouter un chapitre</span>
+                  <span className="text-sm">Ajouter un cours</span>
                 </Button>
               </Link>
               <Link to="/stats">
